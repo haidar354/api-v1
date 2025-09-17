@@ -1,0 +1,584 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Users API",
+    "description": "Complete API collection for user management endpoints in the school management system. Includes CRUD operations, bulk operations, search, and statistics.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API is running and healthy"
+          },
+          "response": []
+        },
+        {
+          "name": "Database Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health/db",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "db"]
+            },
+            "description": "Check database connection status"
+          },
+          "response": []
+        },
+        {
+          "name": "Users Service Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "health"]
+            },
+            "description": "Check users service health status"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints for monitoring API and database status"
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users?page=1&limit=10&include_role=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name or email",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "",
+                  "description": "Filter by role ID",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, full_name, email)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                },
+                {
+                  "key": "include_role",
+                  "value": "true",
+                  "description": "Include role information"
+                }
+              ]
+            },
+            "description": "Retrieve all users with pagination, filtering, and sorting options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/1?include_role=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "1"],
+              "query": [
+                {
+                  "key": "include_role",
+                  "value": "true",
+                  "description": "Include role information in response"
+                }
+              ]
+            },
+            "description": "Get a specific user by their ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe\",\n  \"email\": \"john.doe@school.edu\",\n  \"id_role\": 3,\n  \"data\": {\n    \"grade\": \"10A\",\n    \"studentId\": \"STD001\",\n    \"phone\": \"+62812345678\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Create a new user. Role IDs: 0=Admin, 1=KepalaSekolah, 2=Staff, 3=Student"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Smith\",\n  \"email\": \"john.smith@school.edu\",\n  \"data\": {\n    \"grade\": \"11A\",\n    \"studentId\": \"STD001\",\n    \"phone\": \"+62812345679\",\n    \"address\": \"123 Main Street\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "1"]
+            },
+            "description": "Update an existing user by ID. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "1"]
+            },
+            "description": "Soft delete a user by ID. User will be marked as deleted but not removed from database."
+          },
+          "response": []
+        },
+        {
+          "name": "Restore User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/1/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "1", "restore"]
+            },
+            "description": "Restore a soft-deleted user by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "Basic CRUD operations for user management"
+    },
+    {
+      "name": "Search & Filter",
+      "item": [
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/search?q=john&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john",
+                  "description": "Search query (minimum 2 characters)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of results (default 10)"
+                }
+              ]
+            },
+            "description": "Search users by name or email with a query string"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/3?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "role", "3"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Users per page"
+                }
+              ]
+            },
+            "description": "Get all users with a specific role. Role IDs: 0=Admin, 1=KepalaSekolah, 2=Staff, 3=Student"
+          },
+          "response": []
+        }
+      ],
+      "description": "Search and filtering endpoints for finding specific users"
+    },
+    {
+      "name": "Bulk Operations",
+      "item": [
+        {
+          "name": "Bulk Create Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"users\": [\n    {\n      \"full_name\": \"Alice Johnson\",\n      \"email\": \"alice.johnson@school.edu\",\n      \"id_role\": 3,\n      \"data\": {\n        \"grade\": \"10A\",\n        \"studentId\": \"STD002\"\n      }\n    },\n    {\n      \"full_name\": \"Bob Wilson\",\n      \"email\": \"bob.wilson@school.edu\",\n      \"id_role\": 3,\n      \"data\": {\n        \"grade\": \"10B\",\n        \"studentId\": \"STD003\"\n      }\n    },\n    {\n      \"full_name\": \"Carol Davis\",\n      \"email\": \"carol.davis@school.edu\",\n      \"id_role\": 2,\n      \"data\": {\n        \"department\": \"Mathematics\",\n        \"employeeId\": \"EMP001\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/bulk",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "bulk"]
+            },
+            "description": "Create multiple users at once. Maximum 100 users per request. Returns partial success info if some users fail."
+          },
+          "response": []
+        }
+      ],
+      "description": "Bulk operations for creating multiple users efficiently"
+    },
+    {
+      "name": "Statistics & Reports",
+      "item": [
+        {
+          "name": "Users Statistics by Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/stats/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "stats", "roles"]
+            },
+            "description": "Get user count statistics grouped by role"
+          },
+          "response": []
+        }
+      ],
+      "description": "Statistical endpoints for user analytics and reporting"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Create Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Admin User\",\n  \"email\": \"admin@school.edu\",\n  \"id_role\": 0,\n  \"data\": {\n    \"department\": \"Administration\",\n    \"employeeId\": \"ADM001\",\n    \"permissions\": [\"all\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Create an admin user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Principal User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Dr. Principal Smith\",\n  \"email\": \"principal@school.edu\",\n  \"id_role\": 1,\n  \"data\": {\n    \"department\": \"Leadership\",\n    \"employeeId\": \"PRI001\",\n    \"office\": \"Principal Office\",\n    \"phone\": \"+62812345678\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Create a principal user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Teacher User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ms. Teacher Johnson\",\n  \"email\": \"teacher.johnson@school.edu\",\n  \"id_role\": 2,\n  \"data\": {\n    \"department\": \"Mathematics\",\n    \"employeeId\": \"TCH001\",\n    \"subjects\": [\"Algebra\", \"Geometry\"],\n    \"classroom\": \"Room 101\",\n    \"phone\": \"+62812345679\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Create a teacher/staff user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Student User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Student Alice Brown\",\n  \"email\": \"alice.brown@student.school.edu\",\n  \"id_role\": 3,\n  \"data\": {\n    \"grade\": \"10\",\n    \"class\": \"A\",\n    \"studentId\": \"2024001\",\n    \"parentName\": \"Mr. Brown\",\n    \"parentPhone\": \"+62812345680\",\n    \"address\": \"123 Student Street\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Create a student user"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/3?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "role", "3"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all students (role ID 3)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/2?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{apiPrefix}}", "users", "role", "2"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all teachers/staff (role ID 2)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing different user types and scenarios"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 404, 500]);",
+          "});",
+          "",
+          "// Check response format",
+          "if (pm.response.code < 400) {",
+          "    pm.test('Response has success field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('success');",
+          "    });",
+          "    ",
+          "    pm.test('Response has message field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('message');",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
