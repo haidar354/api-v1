@@ -7,7 +7,7 @@
   },
   "variable": [
     {
-      "key": "baseUrl",
+      "key": "LOCAL",
       "value": "http://localhost:3001",
       "type": "string"
     },
@@ -32,8 +32,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}/health",
+              "host": ["{{LOCAL}}"],
               "path": ["health"]
             },
             "description": "Check if the API is running and healthy"
@@ -51,8 +51,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/health/db",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}/health/db",
+              "host": ["{{LOCAL}}"],
               "path": ["health", "db"]
             },
             "description": "Check database connection status"
@@ -70,8 +70,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/health",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/health",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "health"]
             },
             "description": "Check users service health status"
@@ -95,8 +95,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users?page=1&limit=10&include_role=true",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users?page=1&limit=10&include_role=true",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"],
               "query": [
                 {
@@ -155,8 +155,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/1?include_role=true",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/1?include_role=true",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "1"],
               "query": [
                 {
@@ -185,8 +185,8 @@
               "raw": "{\n  \"full_name\": \"John Doe\",\n  \"email\": \"john.doe@school.edu\",\n  \"id_role\": 3,\n  \"data\": {\n    \"grade\": \"10A\",\n    \"studentId\": \"STD001\",\n    \"phone\": \"+62812345678\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"]
             },
             "description": "Create a new user. Role IDs: 0=Admin, 1=KepalaSekolah, 2=Staff, 3=Student"
@@ -208,8 +208,8 @@
               "raw": "{\n  \"full_name\": \"John Smith\",\n  \"email\": \"john.smith@school.edu\",\n  \"data\": {\n    \"grade\": \"11A\",\n    \"studentId\": \"STD001\",\n    \"phone\": \"+62812345679\",\n    \"address\": \"123 Main Street\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/1",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/1",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "1"]
             },
             "description": "Update an existing user by ID. All fields are optional."
@@ -227,8 +227,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/1",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/1",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "1"]
             },
             "description": "Soft delete a user by ID. User will be marked as deleted but not removed from database."
@@ -246,8 +246,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/1/restore",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/1/restore",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "1", "restore"]
             },
             "description": "Restore a soft-deleted user by ID"
@@ -271,8 +271,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/search?q=john&limit=10",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/search?q=john&limit=10",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "search"],
               "query": [
                 {
@@ -302,8 +302,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/3?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/role/3?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "role", "3"],
               "query": [
                 {
@@ -343,8 +343,8 @@
               "raw": "{\n  \"users\": [\n    {\n      \"full_name\": \"Alice Johnson\",\n      \"email\": \"alice.johnson@school.edu\",\n      \"id_role\": 3,\n      \"data\": {\n        \"grade\": \"10A\",\n        \"studentId\": \"STD002\"\n      }\n    },\n    {\n      \"full_name\": \"Bob Wilson\",\n      \"email\": \"bob.wilson@school.edu\",\n      \"id_role\": 3,\n      \"data\": {\n        \"grade\": \"10B\",\n        \"studentId\": \"STD003\"\n      }\n    },\n    {\n      \"full_name\": \"Carol Davis\",\n      \"email\": \"carol.davis@school.edu\",\n      \"id_role\": 2,\n      \"data\": {\n        \"department\": \"Mathematics\",\n        \"employeeId\": \"EMP001\"\n      }\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/bulk",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/bulk",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "bulk"]
             },
             "description": "Create multiple users at once. Maximum 100 users per request. Returns partial success info if some users fail."
@@ -368,8 +368,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/stats/roles",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/stats/roles",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "stats", "roles"]
             },
             "description": "Get user count statistics grouped by role"
@@ -397,8 +397,8 @@
               "raw": "{\n  \"full_name\": \"Admin User\",\n  \"email\": \"admin@school.edu\",\n  \"id_role\": 0,\n  \"data\": {\n    \"department\": \"Administration\",\n    \"employeeId\": \"ADM001\",\n    \"permissions\": [\"all\"]\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"]
             },
             "description": "Example: Create an admin user"
@@ -420,8 +420,8 @@
               "raw": "{\n  \"full_name\": \"Dr. Principal Smith\",\n  \"email\": \"principal@school.edu\",\n  \"id_role\": 1,\n  \"data\": {\n    \"department\": \"Leadership\",\n    \"employeeId\": \"PRI001\",\n    \"office\": \"Principal Office\",\n    \"phone\": \"+62812345678\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"]
             },
             "description": "Example: Create a principal user"
@@ -443,8 +443,8 @@
               "raw": "{\n  \"full_name\": \"Ms. Teacher Johnson\",\n  \"email\": \"teacher.johnson@school.edu\",\n  \"id_role\": 2,\n  \"data\": {\n    \"department\": \"Mathematics\",\n    \"employeeId\": \"TCH001\",\n    \"subjects\": [\"Algebra\", \"Geometry\"],\n    \"classroom\": \"Room 101\",\n    \"phone\": \"+62812345679\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"]
             },
             "description": "Example: Create a teacher/staff user"
@@ -466,8 +466,8 @@
               "raw": "{\n  \"full_name\": \"Student Alice Brown\",\n  \"email\": \"alice.brown@student.school.edu\",\n  \"id_role\": 3,\n  \"data\": {\n    \"grade\": \"10\",\n    \"class\": \"A\",\n    \"studentId\": \"2024001\",\n    \"parentName\": \"Mr. Brown\",\n    \"parentPhone\": \"+62812345680\",\n    \"address\": \"123 Student Street\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users"]
             },
             "description": "Example: Create a student user"
@@ -485,8 +485,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/3?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/role/3?page=1&limit=20",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "role", "3"],
               "query": [
                 {
@@ -514,8 +514,8 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}{{apiPrefix}}/users/role/2?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{LOCAL}}{{apiPrefix}}/users/role/2?page=1&limit=20",
+              "host": ["{{LOCAL}}"],
               "path": ["{{apiPrefix}}", "users", "role", "2"],
               "query": [
                 {

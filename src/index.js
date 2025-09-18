@@ -3,7 +3,9 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
+
 import { usersRoute } from '@routes/users.route.js';
+import { uploadRoute } from '@routes/upload.routes.js';
 import { healthCheck } from '@config/database.js';
 
 /**
@@ -32,6 +34,64 @@ app.use('*', logger());
 // Pretty JSON responses
 app.use('*', prettyJSON());
 
+const serveStaticFile = async (c, folder) => {
+  try {
+    // Construct file path by removing the folder prefix
+    const path = c.req.path.replace(new RegExp(`^${folder}`), '');
+    const filePath = `.${folder}/${path}`;
+
+    const file = Bun.file(filePath);
+
+    if (!(await file.exists())) {
+      return c.json({
+        success: false,
+        message: 'File not found',
+        error: 'The requested file does not exist'
+      }, 404);
+    }
+
+    return new Response(file, {
+      status: 200,
+      headers: {
+        'Content-Type': getContentType(filePath),
+        'Cache-Control': 'public, max-age=31536000'
+      }
+    });
+  } catch (error) {
+    console.error('Static file error:', error);
+    return c.json({
+      success: false,
+      message: 'Error serving file',
+      error: 'Failed to serve static file'
+    }, 500);
+  }
+};
+
+/**
+ * Helper to set Content-Type based on extension
+ */
+const getContentType = (filePath) => {
+  const ext = filePath.split('.').pop().toLowerCase();
+  const mimeTypes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'css': 'text/css',
+    'js': 'application/javascript',
+    'html': 'text/html',
+    'json': 'application/json',
+    'txt': 'text/plain',
+    'woff': 'font/woff',
+    'woff2': 'font/woff2',
+    'ttf': 'font/ttf'
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+};
+
+// Use for /public/*
+app.get('/public/*', (c) => serveStaticFile(c, '/public'));
+
 /**
  * Root endpoint
  */
@@ -41,11 +101,6 @@ app.get('/', (c) => {
     message: 'Website Sekolahku API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    endpoints: {
-      users: '/api/users',
-      health: '/health',
-      database: '/health/db'
-    }
   });
 });
 
@@ -86,6 +141,7 @@ app.get('/health/db', async (c) => {
  * API Routes
  */
 app.route('/api/users', usersRoute);
+app.route('/api/upload', uploadRoute);
 
 /**
  * 404 Handler
@@ -104,7 +160,7 @@ app.notFound((c) => {
  */
 app.onError((error, c) => {
   console.error('Global error:', error);
-  
+
   return c.json({
     success: false,
     message: 'Internal server error',
@@ -120,10 +176,10 @@ const server = Bun.serve({
   port: Bun.env.PORT || 3001,
   hostname: Bun.env.HOST || 'localhost',
   fetch: app.fetch,
-  
+
   // Server configuration
   development: Bun.env.NODE_ENV !== 'production',
-  
+
   // Error handling
   error(error) {
     console.error('Server error:', error);
@@ -136,15 +192,15 @@ const server = Bun.serve({
  */
 process.on('SIGTERM', async () => {
   console.log('🔄 Received SIGTERM, shutting down gracefully...');
-  
+
   try {
     // Close database connections
     const { closeDatabase } = await import('@config/database.js');
     await closeDatabase();
-    
+
     // Stop the server
     server.stop();
-    
+
     console.log('✅ Server shut down successfully');
     process.exit(0);
   } catch (error) {
@@ -155,15 +211,15 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('🔄 Received SIGINT, shutting down gracefully...');
-  
+
   try {
     // Close database connections
     const { closeDatabase } = await import('@config/database.js');
     await closeDatabase();
-    
+
     // Stop the server
     server.stop();
-    
+
     console.log('✅ Server shut down successfully');
     process.exit(0);
   } catch (error) {

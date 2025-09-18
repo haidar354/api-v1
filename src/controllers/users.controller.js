@@ -264,8 +264,7 @@ export class UsersController {
   static async healthCheck(c) {
     try {
       // Simple health check by counting users
-      const response = await UsersService.getAllUsers({ limit: 1, page: 1 });
-
+      const response = await UsersService.getAllUsers({ limit: 1 });
       if (response.status >= 200 && response.status < 300) {
         return jsonResponse({
           success: true,
@@ -281,6 +280,7 @@ export class UsersController {
         throw new Error('Service health check failed');
       }
     } catch (error) {
+      console.log("ERROR: ", error);
       return errorResponse(error.message, 503);
     }
   }

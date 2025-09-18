@@ -238,7 +238,8 @@ export class UsersService {
       const total_pages = Math.ceil(count / limit);
 
       return {
-        data: usersList,
+        data: usersList,      
+        status: 200, 
         pagination: {
           current_page: page,
           total_pages,
