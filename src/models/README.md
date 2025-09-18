@@ -120,8 +120,8 @@ const response = await db.insert(surveyResponses).values({
   id_survey: survey.insertId,
   question: 'How satisfied are you with the teaching quality?',
   score: 4,
-  surveyorName: 'Jane Student',
-  surveyorDetails: 'Grade 11, Science Department',
+  surveyor_name: 'Jane Student',
+  surveyor_details: 'Grade 11, Science Department',
 });
 ```
 

@@ -43,18 +43,15 @@ export class AttendanceController {
       // Fetch attendance record
       const attendance = await attendanceService.getAttendanceById(id);
 
-      return jsonResponse({
-        message: 'Attendance record retrieved successfully',
-        attendance
-      }, 200);
+      return jsonResponse(attendance, 200);
 
     } catch (error) {
       console.error('Get attendance by ID error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to fetch attendance record', 500);
     }
   }
@@ -98,11 +95,11 @@ export class AttendanceController {
 
     } catch (error) {
       console.error('Update attendance error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to update attendance record', 500);
     }
   }
@@ -124,11 +121,11 @@ export class AttendanceController {
 
     } catch (error) {
       console.error('Delete attendance error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to delete attendance record', 500);
     }
   }
@@ -165,7 +162,7 @@ export class AttendanceController {
     try {
       // Get validated form data from middleware
       const guestData = c.req.valid('form');
-      
+
       // Parse form data to get signature file
       const formData = await c.req.formData();
       const signatureFile = formData.get('signature');
@@ -199,18 +196,15 @@ export class AttendanceController {
       // Fetch guest record
       const guest = await attendanceService.getGuestById(id);
 
-      return jsonResponse({
-        message: 'Guest record retrieved successfully',
-        guest
-      }, 200);
+      return jsonResponse(guest, 200);
 
     } catch (error) {
       console.error('Get guest by ID error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to fetch guest record', 500);
     }
   }
@@ -246,7 +240,7 @@ export class AttendanceController {
       // Get validated data from middleware
       const { id } = c.req.valid('param');
       const updateData = c.req.valid('form');
-      
+
       // Parse form data to get signature file
       const formData = await c.req.formData();
       const signatureFile = formData.get('signature');
@@ -263,11 +257,11 @@ export class AttendanceController {
 
     } catch (error) {
       console.error('Update guest error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to update guest record', 500);
     }
   }
@@ -289,11 +283,11 @@ export class AttendanceController {
 
     } catch (error) {
       console.error('Delete guest error:', error);
-      
+
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
       }
-      
+
       return errorResponse(error.message || 'Failed to delete guest record', 500);
     }
   }

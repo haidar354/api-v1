@@ -7,7 +7,7 @@ import { mysqlTable, int, varchar, text, datetime, timestamp, boolean } from 'dr
 export const academicYears = mysqlTable('academic_years', {
   id: int('id').primaryKey().autoincrement(),
   year: varchar('year', { length: 9 }).notNull(), // Format: "2024/2025"
-  isActive: boolean('is_active').notNull().default(false),
+  is_active: boolean('is_active').notNull().default(false),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
   deleted_at: timestamp('deleted_at'),
@@ -19,9 +19,9 @@ export const academicYears = mysqlTable('academic_years', {
  */
 export const principalAgendas = mysqlTable('principal_agendas', {
   id: int('id').primaryKey().autoincrement(),
-  eventName: varchar('event_name', { length: 255 }).notNull(),
+  event_name: varchar('event_name', { length: 255 }).notNull(),
   description: text('description'),
-  eventDate: datetime('event_date').notNull(),
+  event_date: datetime('event_date').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
   deleted_at: timestamp('deleted_at'),
@@ -50,8 +50,8 @@ export const surveyResponses = mysqlTable('survey_responses', {
   id_survey: int('id_survey').notNull().references(() => surveys.id),
   question: varchar('question', { length: 255 }).notNull(),
   score: int('score').notNull(),
-  surveyorName: varchar('surveyor_name', { length: 255 }).notNull(),
-  surveyorDetails: text('surveyor_details'),
+  surveyor_name: varchar('surveyor_name', { length: 255 }).notNull(),
+  surveyor_details: text('surveyor_details'),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
   deleted_at: timestamp('deleted_at'),

@@ -1,0 +1,890 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Classes API",
+    "description": "Complete API collection for classes and departments management endpoints in the school management system. Includes Departments and Classes with CRUD operations, bulk operations, search, and statistics.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Classes Service Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/health",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "health"]
+            },
+            "description": "Check classes service health status"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints for monitoring classes service status"
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of departments per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by department name",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, name)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all departments with pagination and filtering options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Department by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments", "1"]
+            },
+            "description": "Get a specific department by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teknik Informatika\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments"]
+            },
+            "description": "Create a new department"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teknik Informatika & Komputer\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments", "1"]
+            },
+            "description": "Update an existing department by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments", "1"]
+            },
+            "description": "Soft delete a department by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Create Departments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departments\": [\n    {\n      \"name\": \"Teknik Informatika\"\n    },\n    {\n      \"name\": \"Teknik Elektro\"\n    },\n    {\n      \"name\": \"Teknik Mesin\"\n    },\n    {\n      \"name\": \"Akuntansi\"\n    },\n    {\n      \"name\": \"Manajemen\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments/bulk",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments", "bulk"]
+            },
+            "description": "Create multiple departments at once. Maximum 20 departments per request."
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for departments management"
+    },
+    {
+      "name": "Classes",
+      "item": [
+        {
+          "name": "Get All Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes?page=1&limit=10&include_relations=true",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of classes per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by grade or subgrade",
+                  "disabled": true
+                },
+                {
+                  "key": "departmentId",
+                  "value": "",
+                  "description": "Filter by department ID",
+                  "disabled": true
+                },
+                {
+                  "key": "academicYearId",
+                  "value": "",
+                  "description": "Filter by academic year ID",
+                  "disabled": true
+                },
+                {
+                  "key": "grade",
+                  "value": "",
+                  "description": "Filter by grade (X, XI, XII, 10, 11, 12)",
+                  "disabled": true
+                },
+                {
+                  "key": "subgrade",
+                  "value": "",
+                  "description": "Filter by subgrade (A, B, C, etc.)",
+                  "disabled": true
+                },
+                {
+                  "key": "include_relations",
+                  "value": "true",
+                  "description": "Include department and academic year information"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, grade, subgrade)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all classes with pagination, filtering, and relation options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/1?include_relations=true",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "1"],
+              "query": [
+                {
+                  "key": "include_relations",
+                  "value": "true",
+                  "description": "Include department and academic year information"
+                }
+              ]
+            },
+            "description": "Get a specific class by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"X\",\n  \"id_department\": 1,\n  \"subgrade\": \"A\",\n  \"id_academic_year\": 1\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"]
+            },
+            "description": "Create a new class. Grade can be X, XI, XII or 10, 11, 12. Subgrade is optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"XI\",\n  \"subgrade\": \"B\",\n  \"id_department\": 2\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "1"]
+            },
+            "description": "Update an existing class by ID. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "1"]
+            },
+            "description": "Soft delete a class by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Create Classes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classes\": [\n    {\n      \"grade\": \"X\",\n      \"id_department\": 1,\n      \"subgrade\": \"A\",\n      \"id_academic_year\": 1\n    },\n    {\n      \"grade\": \"X\",\n      \"id_department\": 1,\n      \"subgrade\": \"B\",\n      \"id_academic_year\": 1\n    },\n    {\n      \"grade\": \"XI\",\n      \"id_department\": 2,\n      \"subgrade\": \"A\",\n      \"id_academic_year\": 1\n    },\n    {\n      \"grade\": \"XII\",\n      \"id_department\": 3,\n      \"subgrade\": \"A\",\n      \"id_academic_year\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/bulk",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "bulk"]
+            },
+            "description": "Create multiple classes at once. Maximum 50 classes per request."
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for classes management"
+    },
+    {
+      "name": "Search & Filter",
+      "item": [
+        {
+          "name": "Search Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/search?q=X&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "X",
+                  "description": "Search query (minimum 1 character)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of results (default 10)"
+                }
+              ]
+            },
+            "description": "Search classes by grade or subgrade with a query string"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Classes by Department",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/department/1?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "department", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Classes per page"
+                }
+              ]
+            },
+            "description": "Get all classes in a specific department"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Classes by Academic Year",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/academic-year/1?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "academic-year", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Classes per page"
+                }
+              ]
+            },
+            "description": "Get all classes in a specific academic year"
+          },
+          "response": []
+        }
+      ],
+      "description": "Search and filtering endpoints for finding specific classes and departments"
+    },
+    {
+      "name": "Statistics & Reports",
+      "item": [
+        {
+          "name": "Classes Statistics by Department",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/stats/departments",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "stats", "departments"]
+            },
+            "description": "Get class count statistics grouped by department"
+          },
+          "response": []
+        }
+      ],
+      "description": "Statistical endpoints for classes analytics and reporting"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Create IT Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teknik Informatika\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments"]
+            },
+            "description": "Example: Create IT department"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Engineering Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teknik Mesin\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/departments",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "departments"]
+            },
+            "description": "Example: Create Engineering department"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Class X TI-A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"X\",\n  \"id_department\": 1,\n  \"subgrade\": \"A\",\n  \"id_academic_year\": 1\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"]
+            },
+            "description": "Example: Create class X TI-A (Grade 10 IT Class A)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Class XI TI-B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"XI\",\n  \"id_department\": 1,\n  \"subgrade\": \"B\",\n  \"id_academic_year\": 1\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"]
+            },
+            "description": "Example: Create class XI TI-B (Grade 11 IT Class B)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Class XII TM-A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"XII\",\n  \"id_department\": 2,\n  \"subgrade\": \"A\",\n  \"id_academic_year\": 1\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"]
+            },
+            "description": "Example: Create class XII TM-A (Grade 12 Engineering Class A)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search IT Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes/department/1?page=1&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes", "department", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all IT department classes"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Grade X Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/classes?grade=X&page=1&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "classes"],
+              "query": [
+                {
+                  "key": "grade",
+                  "value": "X"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all Grade X classes"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing classes and departments functionality"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());",
+          "",
+          "// Check if auth_token is set",
+          "if (!pm.collectionVariables.get('auth_token')) {",
+          "    console.log('Warning: auth_token is not set. Please set the auth_token variable.');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 207, 400, 401, 403, 404, 500]);",
+          "});",
+          "",
+          "// Check for authentication errors",
+          "if (pm.response.code === 401) {",
+          "    pm.test('Authentication required', function () {",
+          "        console.log('Authentication failed. Please check your auth_token.');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for successful requests",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Response has data field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('data');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for error requests",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Error response has error field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error');",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log successful operations",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    console.log('✅ Request successful:', pm.info.requestName);",
+          "} else {",
+          "    console.log('❌ Request failed:', pm.info.requestName, 'Status:', pm.response.code);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

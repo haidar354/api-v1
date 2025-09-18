@@ -1,0 +1,530 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Auth API",
+    "description": "Complete API collection for authentication endpoints in the school management system. Includes login, logout, token refresh, password management, and user profile features for Admin and KepalaSekolah roles.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/login",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "login"]
+            },
+            "description": "Login with email and password. Only users with role 0 (Admin) or 1 (KepalaSekolah) can login. Returns JWT token for authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/logout",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "logout"]
+            },
+            "description": "Logout current user and invalidate the JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/refresh",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "refresh"]
+            },
+            "description": "Refresh the current JWT token to extend session"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/verify",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "verify"]
+            },
+            "description": "Verify if the current JWT token is valid and get user information"
+          },
+          "response": []
+        }
+      ],
+      "description": "Core authentication endpoints for login, logout, and token management"
+    },
+    {
+      "name": "Password Management",
+      "item": [
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/forgot-password",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "forgot-password"]
+            },
+            "description": "Request password reset for a user account. Sends reset instructions to the provided email."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"password\": \"NewPassword123\",\n  \"confirmPassword\": \"NewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/reset-password",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "reset-password"]
+            },
+            "description": "Reset password using the token received from forgot password request"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"OldPassword123\",\n  \"newPassword\": \"NewPassword123\",\n  \"confirmPassword\": \"NewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/change-password",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "change-password"]
+            },
+            "description": "Change password for authenticated user. Requires current password verification."
+          },
+          "response": []
+        }
+      ],
+      "description": "Password management endpoints for forgot, reset, and change password functionality"
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/profile",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "profile"]
+            },
+            "description": "Get current authenticated user's profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated Admin Name\",\n  \"email\": \"updated.admin@school.edu\",\n  \"data\": {\n    \"phone\": \"+62812345678\",\n    \"department\": \"Administration\",\n    \"office\": \"Main Office\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/profile",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "profile"]
+            },
+            "description": "Update current authenticated user's profile information"
+          },
+          "response": []
+        }
+      ],
+      "description": "User profile management endpoints for authenticated users"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/login",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "login"]
+            },
+            "description": "Example: Login as Admin user (role 0)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login as KepalaSekolah",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"principal@school.edu\",\n  \"password\": \"Principal123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/login",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "login"]
+            },
+            "description": "Example: Login as KepalaSekolah user (role 1)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login Invalid Role (Should Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@school.edu\",\n  \"password\": \"Teacher123\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/login",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "login"]
+            },
+            "description": "Example: Attempt login with role 2 (Teacher) - should fail as only roles 0 and 1 can login"
+          },
+          "response": []
+        },
+        {
+          "name": "Login Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu\",\n  \"password\": \"WrongPassword\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/auth/login",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "auth", "login"]
+            },
+            "description": "Example: Login with invalid credentials - should fail"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Protected Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Test accessing protected endpoint with auth token"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Without Auth Token (Should Fail)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/users",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "users"]
+            },
+            "description": "Example: Test accessing protected endpoint without auth token - should fail with 401"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing authentication scenarios and edge cases"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());",
+          "",
+          "// Log authentication request info",
+          "if (pm.info.requestName.includes('Login')) {",
+          "    console.log('🔐 Attempting login...');",
+          "} else if (pm.request.headers.find(h => h.key === 'Authorization')) {",
+          "    console.log('🔑 Using authentication token...');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 400, 401, 403, 404, 422, 500]);",
+          "});",
+          "",
+          "// Handle successful login",
+          "if (pm.info.requestName.includes('Login') && pm.response.code === 200) {",
+          "    pm.test('Login successful - has token', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('token');",
+          "        ",
+          "        // Automatically set the auth_token variable",
+          "        if (jsonData.token) {",
+          "            pm.collectionVariables.set('auth_token', jsonData.token);",
+          "            console.log('✅ Login successful! Auth token automatically set.');",
+          "        }",
+          "    });",
+          "    ",
+          "    pm.test('Login successful - has user data', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('user');",
+          "        pm.expect(jsonData.user).to.have.property('id');",
+          "        pm.expect(jsonData.user).to.have.property('email');",
+          "        pm.expect(jsonData.user).to.have.property('role');",
+          "    });",
+          "}",
+          "",
+          "// Handle login failures",
+          "if (pm.info.requestName.includes('Login') && pm.response.code >= 400) {",
+          "    pm.test('Login failed as expected', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error');",
+          "        console.log('❌ Login failed:', jsonData.error);",
+          "    });",
+          "}",
+          "",
+          "// Handle authentication errors",
+          "if (pm.response.code === 401) {",
+          "    pm.test('Authentication required', function () {",
+          "        console.log('❌ Authentication failed. Token may be invalid or expired.');",
+          "    });",
+          "}",
+          "",
+          "// Handle authorization errors",
+          "if (pm.response.code === 403) {",
+          "    pm.test('Authorization failed', function () {",
+          "        console.log('❌ Access denied. User may not have required permissions.');",
+          "    });",
+          "}",
+          "",
+          "// Handle token refresh",
+          "if (pm.info.requestName.includes('Refresh') && pm.response.code === 200) {",
+          "    pm.test('Token refresh successful', function () {",
+          "        const jsonData = pm.response.json();",
+          "        if (jsonData.token) {",
+          "            pm.collectionVariables.set('auth_token', jsonData.token);",
+          "            console.log('✅ Token refreshed successfully!');",
+          "        }",
+          "    });",
+          "}",
+          "",
+          "// Handle logout",
+          "if (pm.info.requestName.includes('Logout') && pm.response.code === 200) {",
+          "    pm.test('Logout successful', function () {",
+          "        // Clear the auth token",
+          "        pm.collectionVariables.set('auth_token', '');",
+          "        console.log('✅ Logout successful! Auth token cleared.');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for successful requests",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Response has message or data field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.satisfy(function(data) {",
+          "            return data.hasOwnProperty('message') || data.hasOwnProperty('data') || data.hasOwnProperty('token');",
+          "        });",
+          "    });",
+          "}",
+          "",
+          "// Check response format for error requests",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Error response has error field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error');",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log operation result",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    console.log('✅ Request successful:', pm.info.requestName);",
+          "} else {",
+          "    console.log('❌ Request failed:', pm.info.requestName, 'Status:', pm.response.code);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

@@ -5,9 +5,12 @@ import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
 
 import { usersRoute } from '@routes/users.route';
-import { uploadRoute } from '@routes/upload.routes';
-import { authRoute } from '@routes/auth.routes';
-import { attendanceRoute } from '@routes/attendance.routes';
+import { uploadRoute } from '@routes/upload.route';
+import { authRoute } from '@routes/auth.route';
+import { attendanceRoute } from '@routes/attendance.route';
+import { academicRoute } from '@routes/academic.route';
+import { roleRoute } from '@routes/role.route';
+import { classesRoute } from '@routes/classes.route';
 import { healthCheck } from '@config/database';
 
 /**
@@ -136,6 +139,8 @@ app.route('/api/users', usersRoute);
 app.route('/api/upload', uploadRoute);
 app.route('/api/auth', authRoute);
 app.route('/api/attendance', attendanceRoute);
+app.route('/api/academic', academicRoute);
+app.route('/api/role', roleRoute);
 
 /**
  * 404 Handler

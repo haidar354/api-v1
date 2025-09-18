@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { AuthController } from '@controller/auth.controller';
+import { AuthController } from '@controllers/auth.controller';
 import { 
   validateLogin,
   validateChangePassword,
@@ -19,7 +19,8 @@ authRoute.post('/reset-password', validateResetPassword, AuthController.resetPas
 // Protected routes
 authRoute.post('/change-password', authMiddleware, validateChangePassword, AuthController.changePassword);
 authRoute.post('/verify-token', authMiddleware, AuthController.verifyToken);
-authRoute.get('/profile', authMiddleware, validateUpdateProfile, AuthController.getProfile);
+authRoute.get('/profile', authMiddleware, AuthController.getProfile);
+authRoute.put('/profile', authMiddleware, validateUpdateProfile, AuthController.profileUpdate);
 authRoute.post('/logout', authMiddleware, AuthController.logout);
 
 export { authRoute };

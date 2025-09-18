@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { UsersController } from '@controller/users.controller';
+import { UsersController } from '@controllers/users.controller';
 import {
   validateCreateUser,
   validateUpdateUser,

@@ -1,6 +1,6 @@
 import { db } from '@config/database.js';
 import { attendance, guests } from '@models/attendance.model.js';
-import { users } from '@models/users.model.js';
+import { users, roles } from '@models/users.model.js';
 import { eq, and, gte, lte, like, desc, asc, isNull, count } from 'drizzle-orm';
 import uploadService from './upload.service.js';
 
@@ -21,23 +21,6 @@ class AttendanceService {
     try {
       const { id_user, date, status } = attendanceData;
 
-      // Check if attendance already exists for this user and date
-      const existingAttendance = await db
-        .select()
-        .from(attendance)
-        .where(
-          and(
-            eq(attendance.id_user, id_user),
-            eq(attendance.date, date),
-            isNull(attendance.deleted_at)
-          )
-        )
-        .limit(1);
-
-      if (existingAttendance.length > 0) {
-        throw new Error('Attendance record already exists for this user and date');
-      }
-
       // Verify user exists
       const user = await db
         .select()
@@ -50,24 +33,21 @@ class AttendanceService {
       }
 
       // Create attendance record
-      const [newAttendance] = await db
+      const insert_result = await db
         .insert(attendance)
         .values({
           id_user,
           date,
           status: Array.isArray(status) ? status : [status]
-        })
-        .$returningId();
+        });
 
-      // Fetch the created record with user details
-      const createdAttendance = await this.getAttendanceById(newAttendance.id);
+      // Get the inserted attendance by ID
+      const insert_id = insert_result[0].insertId;
+      const createdAttendance = await this.getAttendanceById(insert_id);
 
       return {
         status: 201,
-        data: {
-          message: 'Attendance record created successfully',
-          attendance: createdAttendance
-        }
+        data: createdAttendance
       };
 
     } catch (error) {
@@ -91,11 +71,14 @@ class AttendanceService {
           status: attendance.status,
           created_at: attendance.created_at,
           updated_at: attendance.updated_at,
-          user_name: users.full_name,
-          user_email: users.email
+          users: {
+            full_name: users.full_name,
+            role_name: roles.name
+          }
         })
         .from(attendance)
         .leftJoin(users, eq(attendance.id_user, users.id))
+        .leftJoin(roles, eq(users.id_role, roles.id))
         .where(
           and(
             eq(attendance.id, id),
@@ -124,7 +107,7 @@ class AttendanceService {
   async getAttendances(filters = {}) {
     try {
       const {
-        user_id,
+        id_user,
         start_date,
         end_date,
         status,
@@ -136,8 +119,8 @@ class AttendanceService {
       let whereConditions = [isNull(attendance.deleted_at)];
 
       // Apply filters
-      if (user_id) {
-        whereConditions.push(eq(attendance.id_user, user_id));
+      if (id_user) {
+        whereConditions.push(eq(attendance.id_user, id_user));
       }
 
       if (start_date) {
@@ -157,6 +140,7 @@ class AttendanceService {
         .select({ count: count() })
         .from(attendance)
         .leftJoin(users, eq(attendance.id_user, users.id))
+        .leftJoin(roles, eq(users.id_role, roles.id))
         .where(and(...whereConditions));
 
       const total = totalResult.count;
@@ -170,11 +154,14 @@ class AttendanceService {
           status: attendance.status,
           created_at: attendance.created_at,
           updated_at: attendance.updated_at,
-          user_name: users.full_name,
-          user_email: users.email
+          users: {
+            full_name: users.full_name,
+            role_name: roles.name
+          }
         })
         .from(attendance)
         .leftJoin(users, eq(attendance.id_user, users.id))
+        .leftJoin(roles, eq(users.id_role, roles.id))
         .where(and(...whereConditions))
         .orderBy(desc(attendance.date), desc(attendance.created_at))
         .limit(limit)
@@ -182,15 +169,7 @@ class AttendanceService {
 
       return {
         status: 200,
-        data: {
-          attendances: results,
-          pagination: {
-            page,
-            limit,
-            total,
-            total_pages: Math.ceil(total / limit)
-          }
-        }
+        data: results,
       };
 
     } catch (error) {
@@ -224,10 +203,7 @@ class AttendanceService {
 
       return {
         status: 200,
-        data: {
-          message: 'Attendance record updated successfully',
-          attendance: updatedAttendance
-        }
+        data: updatedAttendance
       };
 
     } catch (error) {
@@ -275,35 +251,31 @@ class AttendanceService {
    */
   async createGuest(guestData, signatureFile = null) {
     try {
-      const { full_name, address, purpose, visit_date } = guestData;
+      const { full_name, address, purpose } = guestData;
       let signature_path = null;
 
-      // Upload signature if provided
       if (signatureFile) {
         signature_path = await uploadService.saveFile(signatureFile, 'signatures');
       }
 
-      // Create guest record
-      const [newGuest] = await db
-        .insert(guests)
-        .values({
-          full_name,
-          address,
-          purpose,
-          visitDate: new Date(visit_date),
-          signature: signature_path
-        })
-        .$returningId();
+      // Insert guest record
+      const result = await db.insert(guests).values({
+        full_name,
+        address,
+        purpose,
+        visit_date: new Date(),
+        signature: signature_path
+      });
+
+      // Get the inserted ID from MySQL
+      const newGuestId = result[0].insertId;
 
       // Fetch the created record
-      const createdGuest = await this.getGuestById(newGuest.id);
+      const createdGuest = await this.getGuestById(newGuestId);
 
       return {
         status: 201,
-        data: {
-          message: 'Guest record created successfully',
-          guest: createdGuest
-        }
+        data: createdGuest
       };
 
     } catch (error) {
@@ -311,6 +283,7 @@ class AttendanceService {
       throw new Error(error.message || 'Failed to create guest record');
     }
   }
+
 
   /**
    * Get guest record by ID
@@ -362,13 +335,13 @@ class AttendanceService {
 
       // Apply filters
       if (start_date) {
-        whereConditions.push(gte(guests.visitDate, new Date(start_date)));
+        whereConditions.push(gte(guests.visit_date, new Date(start_date)));
       }
 
       if (end_date) {
         const endDateTime = new Date(end_date);
         endDateTime.setHours(23, 59, 59, 999);
-        whereConditions.push(lte(guests.visitDate, endDateTime));
+        whereConditions.push(lte(guests.visit_date, endDateTime));
       }
 
       if (search) {
@@ -390,7 +363,7 @@ class AttendanceService {
         .select()
         .from(guests)
         .where(and(...whereConditions))
-        .orderBy(desc(guests.visitDate), desc(guests.created_at))
+        .orderBy(desc(guests.visit_date), desc(guests.created_at))
         .limit(limit)
         .offset(offset);
 
@@ -440,7 +413,7 @@ class AttendanceService {
 
       // Convert visit_date to Date object if provided
       if (updateData.visit_date) {
-        updatePayload.visitDate = new Date(updateData.visit_date);
+        updatePayload.visit_date = new Date(updateData.visit_date);
         delete updatePayload.visit_date;
       }
 
@@ -455,10 +428,7 @@ class AttendanceService {
 
       return {
         status: 200,
-        data: {
-          message: 'Guest record updated successfully',
-          guest: updatedGuest
-        }
+        data: updatedGuest
       };
 
     } catch (error) {
@@ -511,7 +481,7 @@ class AttendanceService {
       for (const attendanceData of attendancesData) {
         try {
           const result = await this.createAttendance(attendanceData);
-          createdRecords.push(result.data.attendance);
+          createdRecords.push(result.data);
         } catch (error) {
           errors.push({
             data: attendanceData,
@@ -522,11 +492,7 @@ class AttendanceService {
 
       return {
         status: errors.length === 0 ? 201 : 207, // 207 Multi-Status if some failed
-        data: {
-          message: `Created ${createdRecords.length} attendance records`,
-          created: createdRecords,
-          errors: errors
-        }
+        data: createdRecords
       };
 
     } catch (error) {
@@ -544,11 +510,11 @@ class AttendanceService {
    */
   async getAttendanceStats(filters = {}) {
     try {
-      const { start_date, end_date, user_id } = filters;
+      const { start_date, end_date, id_user } = filters;
       let whereConditions = [isNull(attendance.deleted_at)];
 
-      if (user_id) {
-        whereConditions.push(eq(attendance.id_user, user_id));
+      if (id_user) {
+        whereConditions.push(eq(attendance.id_user, id_user));
       }
 
       if (start_date) {

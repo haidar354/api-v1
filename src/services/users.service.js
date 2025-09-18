@@ -54,7 +54,7 @@ export class UsersService {
         // Hash password and prepare data
         const salt_rounds = 12;
         const hash_password = await bcrypt.hash(userData.data.password, salt_rounds);
-        
+
         final_data = {
           ...userData.data,
           password: hash_password
@@ -112,6 +112,7 @@ export class UsersService {
    * @returns {Promise<Object>} Users list with pagination info
    */
   static async getAllUsers(options = {}) {
+    console.log("INI BEKERJA")
     try {
       const {
         page = 1,
@@ -123,11 +124,13 @@ export class UsersService {
         sortOrder = 'desc'
       } = options;
 
+      console.log("INI BEKERJA 2")
+
       const offset = (page - 1) * limit;
 
       // Build where conditions
       const whereConditions = [isNull(users.deleted_at)];
-
+      console.log("INI BEKERJA 3")
       if (search) {
         whereConditions.push(
           or(
@@ -136,10 +139,12 @@ export class UsersService {
           )
         );
       }
+      console.log("INI BEKERJA 4")
 
       if (role) {
         whereConditions.push(eq(users.id_role, parseInt(role))); // Map id_role -> id_role
       }
+      console.log("INI BEKERJA 5")
 
       // Build order by
       const orderBy = sortOrder === 'asc'
@@ -148,12 +153,12 @@ export class UsersService {
 
       // Query users
       let query;
+      console.log("INI BEKERJA 6")
       if (include_role) {
         query = db
           .select({
             id: users.id,
             full_name: users.full_name,
-            email: users.email,
             id_role: users.id_role, // Map id_role -> id_role
             data: users.data,
             created_at: users.created_at,
@@ -169,12 +174,13 @@ export class UsersService {
           .orderBy(orderBy)
           .limit(limit)
           .offset(offset);
+        console.log("INI BEKERJA 7")
+
       } else {
         query = db
           .select({
             id: users.id,
             full_name: users.full_name,
-            email: users.email,
             id_role: users.id_role, // Map id_role -> id_role
             data: users.data,
             created_at: users.created_at,
@@ -198,8 +204,8 @@ export class UsersService {
       const total_pages = Math.ceil(count / limit);
 
       return {
-        data: usersList,      
-        status: 200, 
+        data: usersList,
+        status: 200,
         pagination: {
           current_page: page,
           total_pages,
@@ -229,8 +235,7 @@ export class UsersService {
           .select({
             id: users.id,
             full_name: users.full_name,
-            email: users.email,
-            id_role: users.id_role, // Map id_role -> id_role
+            id_role: users.id_role,
             data: users.data,
             created_at: users.created_at,
             updated_at: users.updated_at,
@@ -251,7 +256,6 @@ export class UsersService {
           .select({
             id: users.id,
             full_name: users.full_name,
-            email: users.email,
             id_role: users.id_role, // Map id_role -> id_role
             data: users.data,
             created_at: users.created_at,

@@ -84,23 +84,26 @@ export const updateProfileSchema = z.object({
     .min(2, 'Full name must be at least 2 characters')
     .max(255, 'Full name must not exceed 255 characters')
     .regex(/^[a-zA-Z\s.'-]+$/, 'Full name can only contain letters, spaces, dots, apostrophes, and hyphens')
-    .transform((val) => val.trim())
     .optional(),
-  
-  email: z.string()
-    .email('Invalid email format')
-    .max(255, 'Email must not exceed 255 characters')
-    .toLowerCase()
-    .transform((val) => val.trim())
-    .optional(),
-  
-  data: z.record(z.any()).optional()
+
+  data: z.object({
+    email: z.string()
+      .email('Invalid email format')
+      .max(255, 'Email must not exceed 255 characters')
+      .optional(),
+    password: z.string()
+      .min(6, 'Password must be at least 6 characters')
+      .max(100, 'Password must not exceed 100 characters')
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number')
+      .optional(),
+  }).catchall(z.any())
     .refine((val) => {
       if (val && typeof val === 'object') {
         return Object.keys(val).length <= 50; // Reasonable limit for JSON data
       }
       return true;
-    }, 'User data object is too large'),
+    }, 'User data object is too large')
+    .optional(),
 });
 
 /**

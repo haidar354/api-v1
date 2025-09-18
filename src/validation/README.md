@@ -161,7 +161,7 @@ app.post('/custom-users', validateCustomUser, async (c) => {
   full_name: "Dr. Smith",
   address: "123 Main St",
   purpose: "Parent-teacher conference",
-  visitDate: "2024-01-20T10:00:00Z"
+  visit_date: "2024-01-20T10:00:00Z"
 }
 ```
 
@@ -176,7 +176,7 @@ app.post('/custom-users', validateCustomUser, async (c) => {
 // Academic year
 {
   year: "2024/2025",
-  isActive: true
+  is_active: true
 }
 
 // Survey response
@@ -184,8 +184,8 @@ app.post('/custom-users', validateCustomUser, async (c) => {
   id_survey: 1,
   question: "How satisfied are you with teaching quality?",
   score: 8,
-  surveyorName: "John Student",
-  surveyorDetails: "Grade 11, Science Department"
+  surveyor_name: "John Student",
+  surveyor_details: "Grade 11, Science Department"
 }
 ```
 

@@ -7,8 +7,8 @@ import { zValidator } from '@hono/zod-validator';
 export const roleSchema = z.object({
   name: z.string()
     .min(2, 'Role name must be at least 2 characters')
-    .max(50, 'Role name must not exceed 50 characters')
-    .regex(/^[a-zA-Z\s]+$/, 'Role name can only contain letters and spaces'),
+    .max(50, 'Role name must not exceed 50 characters'),
+  can_login: z.boolean().default(false),
 });
 
 export const createRoleSchema = roleSchema;
@@ -17,7 +17,7 @@ export const updateRoleSchema = roleSchema.partial();
 
 export const roleIdSchema = z.object({
   id: z.string().transform((val) => parseInt(val, 10))
-    .refine((val) => !isNaN(val) && val > 0, 'Invalid role ID'),
+    .refine((val) => !isNaN(val) && val > 0, 'Invalid role ID bos'),
 });
 
 /**
@@ -28,7 +28,7 @@ export const userSchema = z.object({
     .min(2, 'Full name must be at least 2 characters')
     .max(255, 'Full name must not exceed 255 characters')
     .regex(/^[a-zA-Z\s.'-]+$/, 'Full name can only contain letters, spaces, dots, apostrophes, and hyphens'),
-    
+
   id_role: z.number()
     .int('Role ID must be an integer')
     .min(0, 'Role ID must be 0 or greater'),

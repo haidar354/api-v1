@@ -37,7 +37,7 @@ export const guests = mysqlTable('guests', {
   full_name: varchar('full_name', { length: 255 }).notNull(),
   address: text('address'),
   purpose: varchar('purpose', { length: 255 }).notNull(),
-  visitDate: datetime('visit_date').notNull(),
+  visit_date: datetime('visit_date').notNull(),
   signature: varchar('signature', { length: 255 }),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),

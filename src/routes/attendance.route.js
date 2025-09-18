@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { AttendanceController } from '@controller/attendance.controller.js';
+import { AttendanceController } from '@controllers/attendance.controller.js';
 import { authMiddleware } from '@middlewares/auth.middleware.js';
 import {
   validateCreateAttendance,

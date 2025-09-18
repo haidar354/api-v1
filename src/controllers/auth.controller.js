@@ -168,6 +168,7 @@ export class AuthController {
         try {
             // Get user from token (assuming middleware sets c.user)
             const user = c.get('user');
+            console.log("USER: ", user)
             if (!user) {
                 return errorResponse('Authentication required', 401);
             }
@@ -182,6 +183,49 @@ export class AuthController {
         } catch (error) {
             console.error('Get profile error:', error);
             return errorResponse('Failed to get profile', 500);
+        }
+    }
+
+    /**
+     * Update user profile
+     * @param {Object} c - Hono context object
+     * @returns {Promise<Response>} Profile update response
+     */
+    static async profileUpdate(c) {
+        try {
+            // Get user from token (assuming middleware sets c.user)
+            const user = c.get('user');
+            if (!user) {
+                return errorResponse('Authentication required', 401);
+            }
+
+            // Get validated data from middleware
+            const update_data = c.req.valid('json');
+
+            // Update profile using AuthService
+            const result = await AuthService.profileUpdate(user.id, update_data);
+
+            return jsonResponse(result.data, result.status);
+
+        } catch (error) {
+            console.error('Profile update error:', error);
+
+            const is_validation_error = error.message.includes('Email already exists') ||
+                error.message.includes('Invalid') ||
+                error.message.includes('required');
+
+            const is_auth_error = error.message.includes('Unauthorized') ||
+                error.message.includes('not found');
+
+            if (is_auth_error) {
+                return errorResponse(error.message, 401);
+            }
+
+            if (is_validation_error) {
+                return errorResponse(error.message, 400);
+            }
+
+            return errorResponse('Profile update failed', 500);
         }
     }
 

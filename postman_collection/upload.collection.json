@@ -1,0 +1,608 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Upload API",
+    "description": "Complete API collection for file upload management endpoints in the school management system. Includes single file upload, multiple file upload with folder organization, and file management features.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "File Upload",
+      "item": [
+        {
+          "name": "Upload Single File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a file to upload"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "documents",
+                  "type": "text",
+                  "description": "Optional folder name (max 20 characters)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload a single file to the server. File will be stored in /public or /public/{folder_name} if specified. File naming format: {folder_name}-{sub_folder}-{UUID}-{first25chars}.{ext}"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Multiple Files",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select multiple files to upload"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Additional file (you can add more files by duplicating this key)"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "batch",
+                  "type": "text",
+                  "description": "Optional folder name for organizing files (max 20 characters)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload multiple files at once. All files will be organized in the same folder if folder_name is specified."
+          },
+          "response": []
+        }
+      ],
+      "description": "File upload endpoints for single and multiple file uploads"
+    },
+    {
+      "name": "Organized Uploads",
+      "item": [
+        {
+          "name": "Upload to Logo Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select logo file (PNG, JPG, SVG recommended)"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "logo",
+                  "type": "text",
+                  "description": "Logo folder for school branding assets"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload logo files to the logo folder for school branding"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload to Signatures Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select signature file (PNG, JPG recommended)"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "signatures",
+                  "type": "text",
+                  "description": "Signatures folder for official documents"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload signature files for official school documents and certificates"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload to Batch Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select multiple files for batch processing"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Additional file for batch upload"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "batch",
+                  "type": "text",
+                  "description": "Batch folder for bulk file operations"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload multiple files to batch folder for bulk processing operations"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload to Documents Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select document file (PDF, DOC, DOCX, etc.)"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "documents",
+                  "type": "text",
+                  "description": "Documents folder for general file storage"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload documents to the documents folder for general file storage"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload to Images Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select image files (JPG, PNG, GIF, etc.)"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Additional image file"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "images",
+                  "type": "text",
+                  "description": "Images folder for photo galleries and media"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Upload images to the images folder for photo galleries and media content"
+          },
+          "response": []
+        }
+      ],
+      "description": "Organized file uploads to specific folders for better file management"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Upload School Logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select school logo file"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "logo",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Example: Upload school logo to logo folder"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Principal Signature",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select principal signature file"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "signatures",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Example: Upload principal signature for official documents"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Student Photos Batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select multiple student photos"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Additional student photo"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Another student photo"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "batch",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Example: Batch upload student photos for ID cards or yearbook"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Curriculum Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select curriculum PDF or document"
+                },
+                {
+                  "key": "folder_name",
+                  "value": "documents",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Example: Upload curriculum document to documents folder"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Without Folder (Default)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select any file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/upload",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "upload"]
+            },
+            "description": "Example: Upload file to default /public folder without specifying folder_name"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing various upload scenarios"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());",
+          "",
+          "// Check if auth_token is set",
+          "if (!pm.collectionVariables.get('auth_token')) {",
+          "    console.log('Warning: auth_token is not set. Please set the auth_token variable.');",
+          "}",
+          "",
+          "// Log upload request info",
+          "console.log('🔄 Preparing file upload request...');"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 400, 401, 403, 413, 415, 500]);",
+          "});",
+          "",
+          "// Check for authentication errors",
+          "if (pm.response.code === 401) {",
+          "    pm.test('Authentication required', function () {",
+          "        console.log('❌ Authentication failed. Please check your auth_token.');",
+          "    });",
+          "}",
+          "",
+          "// Check for file size errors",
+          "if (pm.response.code === 413) {",
+          "    pm.test('File too large', function () {",
+          "        console.log('❌ File size exceeds server limits.');",
+          "    });",
+          "}",
+          "",
+          "// Check for unsupported file type",
+          "if (pm.response.code === 415) {",
+          "    pm.test('Unsupported file type', function () {",
+          "        console.log('❌ File type not supported by server.');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for successful uploads",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Upload successful - has message field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('message');",
+          "    });",
+          "    ",
+          "    pm.test('Upload successful - has uploaded_files array', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('uploaded_files');",
+          "        pm.expect(jsonData.uploaded_files).to.be.an('array');",
+          "    });",
+          "    ",
+          "    // Log uploaded files info",
+          "    try {",
+          "        const jsonData = pm.response.json();",
+          "        if (jsonData.uploaded_files && jsonData.uploaded_files.length > 0) {",
+          "            console.log('✅ Files uploaded successfully:');",
+          "            jsonData.uploaded_files.forEach((file, index) => {",
+          "                console.log(`   ${index + 1}. ${file.filename || file.name || 'Unknown'}`);",
+          "            });",
+          "        }",
+          "    } catch (e) {",
+          "        console.log('✅ Upload successful but could not parse file details');",
+          "    }",
+          "}",
+          "",
+          "// Check response format for error requests",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Error response has error field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error');",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Upload response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(30000); // 30 seconds for file uploads",
+          "});",
+          "",
+          "// Log operation result",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    console.log('✅ Upload request successful:', pm.info.requestName);",
+          "} else {",
+          "    console.log('❌ Upload request failed:', pm.info.requestName, 'Status:', pm.response.code);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

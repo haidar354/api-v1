@@ -61,7 +61,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/attendance?page=1&limit=10&user_id=1&start_date=2024-01-01&end_date=2024-01-31&status=hadir",
+							"raw": "{{base_url}}/api/attendance?page=1&limit=10&id_user=1&start_date=2024-01-01&end_date=2024-01-31&status=hadir",
 							"host": [
 								"{{base_url}}"
 							],
@@ -81,7 +81,7 @@
 									"description": "Number of records per page"
 								},
 								{
-									"key": "user_id",
+									"key": "id_user",
 									"value": "1",
 									"description": "Filter by user ID"
 								},
@@ -250,7 +250,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/attendance/stats?start_date=2024-01-01&end_date=2024-01-31&user_id=1",
+							"raw": "{{base_url}}/api/attendance/stats?start_date=2024-01-01&end_date=2024-01-31&id_user=1",
 							"host": [
 								"{{base_url}}"
 							],
@@ -271,7 +271,7 @@
 									"description": "End date for statistics (YYYY-MM-DD)"
 								},
 								{
-									"key": "user_id",
+									"key": "id_user",
 									"value": "1",
 									"description": "Filter statistics by user ID"
 								}

@@ -1,0 +1,834 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Academic API",
+    "description": "Complete API collection for academic management endpoints in the school management system. Includes Academic Years, Principal Agendas, Surveys, and Survey Responses with CRUD operations and bulk operations.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Academic Years",
+      "item": [
+        {
+          "name": "Get All Academic Years",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of items per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by year or semester",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, year, semester)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all academic years with pagination and filtering options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Academic Year by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years", "1"]
+            },
+            "description": "Get a specific academic year by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Academic Year",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"2024/2025\",\n  \"semester\": \"Ganjil\",\n  \"start_date\": \"2024-07-01\",\n  \"end_date\": \"2024-12-31\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years"]
+            },
+            "description": "Create a new academic year"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Academic Year",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"2024/2025\",\n  \"semester\": \"Genap\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-06-30\",\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years", "1"]
+            },
+            "description": "Update an existing academic year by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Academic Year",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years", "1"]
+            },
+            "description": "Soft delete an academic year by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for academic years management"
+    },
+    {
+      "name": "Principal Agendas",
+      "item": [
+        {
+          "name": "Get All Principal Agendas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/agendas?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "agendas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of items per page"
+                },
+                {
+                  "key": "academic_year_id",
+                  "value": "",
+                  "description": "Filter by academic year ID",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by title or description",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all principal agendas with pagination and filtering"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Principal Agenda by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/agendas/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "agendas", "1"]
+            },
+            "description": "Get a specific principal agenda by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Principal Agenda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Monthly Staff Meeting\",\n  \"description\": \"Regular monthly meeting for all teaching staff to discuss curriculum updates and school policies.\",\n  \"date\": \"2024-09-25\",\n  \"time\": \"09:00\",\n  \"location\": \"Main Conference Room\",\n  \"id_academic_year\": 1,\n  \"priority\": \"high\",\n  \"status\": \"scheduled\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/agendas",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "agendas"]
+            },
+            "description": "Create a new principal agenda"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Principal Agenda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Staff Meeting\",\n  \"description\": \"Updated description for the staff meeting.\",\n  \"date\": \"2024-09-26\",\n  \"time\": \"10:00\",\n  \"location\": \"Updated Conference Room\",\n  \"priority\": \"medium\",\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/agendas/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "agendas", "1"]
+            },
+            "description": "Update an existing principal agenda by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Principal Agenda",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/agendas/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "agendas", "1"]
+            },
+            "description": "Soft delete a principal agenda by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for principal agendas management"
+    },
+    {
+      "name": "Surveys",
+      "item": [
+        {
+          "name": "Get All Surveys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of items per page"
+                },
+                {
+                  "key": "academic_year_id",
+                  "value": "",
+                  "description": "Filter by academic year ID",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (draft, active, closed)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all surveys with pagination and filtering"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Survey by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys", "1"]
+            },
+            "description": "Get a specific survey by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Student Satisfaction Survey\",\n  \"description\": \"Annual survey to measure student satisfaction with school facilities and teaching quality.\",\n  \"questions\": [\n    {\n      \"question\": \"How satisfied are you with the teaching quality?\",\n      \"type\": \"rating\",\n      \"options\": [\"1\", \"2\", \"3\", \"4\", \"5\"]\n    },\n    {\n      \"question\": \"What improvements would you suggest?\",\n      \"type\": \"text\"\n    }\n  ],\n  \"id_academic_year\": 1,\n  \"start_date\": \"2024-09-01\",\n  \"end_date\": \"2024-09-30\",\n  \"target_audience\": \"students\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys"]
+            },
+            "description": "Create a new survey"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Survey",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Student Satisfaction Survey\",\n  \"description\": \"Updated description for the survey.\",\n  \"status\": \"active\",\n  \"end_date\": \"2024-10-15\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys", "1"]
+            },
+            "description": "Update an existing survey by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Survey",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys", "1"]
+            },
+            "description": "Soft delete a survey by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for surveys management"
+    },
+    {
+      "name": "Survey Responses",
+      "item": [
+        {
+          "name": "Get All Survey Responses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of items per page"
+                },
+                {
+                  "key": "survey_id",
+                  "value": "",
+                  "description": "Filter by survey ID",
+                  "disabled": true
+                },
+                {
+                  "key": "id_user",
+                  "value": "",
+                  "description": "Filter by user ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all survey responses with pagination and filtering"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Survey Response by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses", "1"]
+            },
+            "description": "Get a specific survey response by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Survey Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_survey\": 1,\n  \"id_user\": 5,\n  \"responses\": {\n    \"question_1\": \"4\",\n    \"question_2\": \"The teaching quality is excellent, but more interactive sessions would be helpful.\"\n  },\n  \"submitted_at\": \"2024-09-15T10:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses"]
+            },
+            "description": "Create a new survey response"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Survey Response",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": {\n    \"question_1\": \"5\",\n    \"question_2\": \"Updated feedback: The teaching quality is outstanding!\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses", "1"]
+            },
+            "description": "Update an existing survey response by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Survey Response",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses", "1"]
+            },
+            "description": "Soft delete a survey response by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Create Survey Responses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": [\n    {\n      \"id_survey\": 1,\n      \"id_user\": 10,\n      \"responses\": {\n        \"question_1\": \"4\",\n        \"question_2\": \"Good teaching methods\"\n      }\n    },\n    {\n      \"id_survey\": 1,\n      \"id_user\": 11,\n      \"responses\": {\n        \"question_1\": \"5\",\n        \"question_2\": \"Excellent experience\"\n      }\n    },\n    {\n      \"id_survey\": 1,\n      \"id_user\": 12,\n      \"responses\": {\n        \"question_1\": \"3\",\n        \"question_2\": \"Could be improved\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses/bulk",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses", "bulk"]
+            },
+            "description": "Create multiple survey responses at once"
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for survey responses management"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Create Complete Academic Year",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"2024/2025\",\n  \"semester\": \"Ganjil\",\n  \"start_date\": \"2024-07-15\",\n  \"end_date\": \"2024-12-20\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/years",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "years"]
+            },
+            "description": "Example: Create a complete academic year"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sample Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Teacher Performance Evaluation\",\n  \"description\": \"Quarterly evaluation survey for teacher performance assessment.\",\n  \"questions\": [\n    {\n      \"question\": \"How would you rate the teacher's communication skills?\",\n      \"type\": \"rating\",\n      \"options\": [\"1\", \"2\", \"3\", \"4\", \"5\"]\n    },\n    {\n      \"question\": \"How well does the teacher explain complex topics?\",\n      \"type\": \"rating\",\n      \"options\": [\"1\", \"2\", \"3\", \"4\", \"5\"]\n    },\n    {\n      \"question\": \"Additional comments or suggestions?\",\n      \"type\": \"text\"\n    }\n  ],\n  \"id_academic_year\": 1,\n  \"start_date\": \"2024-09-01\",\n  \"end_date\": \"2024-09-30\",\n  \"target_audience\": \"students\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/surveys",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "surveys"]
+            },
+            "description": "Example: Create a comprehensive survey"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Survey Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_survey\": 1,\n  \"id_user\": 15,\n  \"responses\": {\n    \"question_1\": \"5\",\n    \"question_2\": \"4\",\n    \"question_3\": \"The teacher is very knowledgeable and makes learning enjoyable. Keep up the great work!\"\n  },\n  \"submitted_at\": \"2024-09-18T14:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/academic/responses",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "academic", "responses"]
+            },
+            "description": "Example: Submit a detailed survey response"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing academic system functionality"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());",
+          "",
+          "// Check if auth_token is set",
+          "if (!pm.collectionVariables.get('auth_token')) {",
+          "    console.log('Warning: auth_token is not set. Please set the auth_token variable.');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 207, 400, 401, 403, 404, 500]);",
+          "});",
+          "",
+          "// Check for authentication errors",
+          "if (pm.response.code === 401) {",
+          "    pm.test('Authentication required', function () {",
+          "        console.log('Authentication failed. Please check your auth_token.');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for successful requests",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Response has data field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('data');",
+          "    });",
+          "}",
+          "",
+          "// Check response format for error requests",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('Error response has error field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error');",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log successful operations",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    console.log('✅ Request successful:', pm.info.requestName);",
+          "} else {",
+          "    console.log('❌ Request failed:', pm.info.requestName, 'Status:', pm.response.code);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '@config/database.js';
 import { users, roles } from '@models/index.models.js';
-import { UsersService } from './users.service.js';
+import { UsersService } from '@services/users.service.js';
 
 /**
  * Authentication Service
@@ -287,12 +287,12 @@ export class AuthService {
 
     /**
      * Change password for authenticated user
-     * @param {number} user_id - User ID
+     * @param {number} id_user - User ID
      * @param {string} current_password - Current password
      * @param {string} new_password - New password
      * @returns {Promise<Object>} Change password result
      */
-    static async changePassword(user_id, current_password, new_password) {
+    static async changePassword(id_user, current_password, new_password) {
         try {
             // Get user by ID with role info
             const [user] = await db
@@ -306,7 +306,7 @@ export class AuthService {
                 .from(users)
                 .leftJoin(roles, eq(users.id_role, roles.id))
                 .where(and(
-                    eq(users.id, user_id),
+                    eq(users.id, id_user),
                     isNull(users.deleted_at)
                 ))
                 .limit(1);
@@ -348,7 +348,7 @@ export class AuthService {
             };
 
             // Update user with new password
-            await UsersService.updateUser(user_id, {
+            await UsersService.updateUser(id_user, {
                 data: updated_data
             });
 
@@ -362,6 +362,112 @@ export class AuthService {
 
         } catch (error) {
             throw new Error(`Password change failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Update user profile for authenticated user
+     * @param {number} id_user - User ID
+     * @param {Object} update_data - Profile data to update
+     * @returns {Promise<Object>} Update result
+     */
+    static async profileUpdate(id_user, update_data) {
+        try {
+            // Get current user to verify they exist and get current data
+            const user_result = await UsersService.getUserById(id_user, false);
+
+            const current_user = user_result.data;
+
+            if (!current_user) {
+                throw new Error('User not found');
+            }
+
+            // Check if user role can login (only users with login access can update profile)
+            const [role_info] = await db
+                .select({
+                    can_login: roles.can_login
+                })
+                .from(roles)
+                .where(eq(roles.id, current_user.id_role))
+                .limit(1);
+
+            if (!role_info || !role_info.can_login) {
+                throw new Error('Unauthorized: User role cannot update profile');
+            }
+
+            // Prepare update payload
+            const update_payload = {};
+
+            // Handle full_name update
+            if (update_data.full_name !== undefined) {
+                update_payload.full_name = update_data.full_name.trim();
+            }
+
+            // Handle data object updates
+            if (update_data.data) {
+                const current_data = current_user.data || {};
+                const updated_data = { ...current_data };
+
+                // Handle email update with uniqueness check
+                if (update_data.data.email !== undefined) {
+                    const new_email = update_data.data.email.toLowerCase().trim();
+
+                    // Check if email is different from current
+                    if (new_email !== current_data.email) {
+                        // Check if email already exists (excluding current user)
+                        const existing_user = await db
+                            .select()
+                            .from(users)
+                            .where(and(
+                                sql`JSON_EXTRACT(data, '$.email') = ${new_email}`,
+                                isNull(users.deleted_at),
+                                sql`id != ${id_user}`
+                            ))
+                            .limit(1);
+
+                        if (existing_user.length > 0) {
+                            throw new Error('Email already exists');
+                        }
+                    }
+
+                    updated_data.email = new_email;
+                }
+
+                // Handle password update with hashing
+                if (update_data.data.password !== undefined) {
+                    const salt_rounds = 12;
+                    const hash_password = await bcrypt.hash(update_data.data.password, salt_rounds);
+                    updated_data.password = hash_password;
+                }
+
+                // Merge other data fields
+                Object.keys(update_data.data).forEach(key => {
+                    if (key !== 'email' && key !== 'password') {
+                        updated_data[key] = update_data.data[key];
+                    }
+                });
+
+                update_payload.data = updated_data;
+            }
+
+            // Update user using UsersService
+            const update_result = await UsersService.updateUser(id_user, update_payload);
+
+            // Return updated user without password
+            const updated_user = update_result.data;
+            if (updated_user.data && updated_user.data.password) {
+                const { password, ...data_without_password } = updated_user.data;
+                updated_user.data = data_without_password;
+            }
+
+            return {
+                data: updated_user,
+                status: 200,
+                pagination: null
+            };
+
+        } catch (error) {
+            throw new Error(`Profile update failed: ${error.message}`);
         }
     }
 }

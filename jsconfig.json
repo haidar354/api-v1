@@ -8,7 +8,7 @@
       "@utils/*": ["./src/utils/*"],
       "@validation/*": ["./src/validation/*"],
       "@routes/*": ["./src/routes/*"],
-      "@controller/*": ["./src/controllers/*"],
+      "@controllers/*": ["./src/controllers/*"],
       "@services/*": ["./src/services/*"],
       "@src/*": ["./src/*"]
     },
