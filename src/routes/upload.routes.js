@@ -1,5 +1,11 @@
 import { Hono } from 'hono';
-import uploadController from '@controller/upload.controller';
+import { UploadController } from '@controller/upload.controller';
+import { authMiddleware } from "@middlewares/auth.middleware";
+import { 
+  validateUploadFile, 
+  validateUploadInfo,
+  validateFileUpload 
+} from '@validation/upload.validation';
 
 /**
  * Upload Routes
@@ -10,38 +16,23 @@ const uploadRoute = new Hono();
 /**
  * POST /upload
  * Upload one or multiple files
- * 
- * Body (multipart/form-data):
- * - file(s): File objects to upload
- * - folder_name (optional): Target folder name (max 20 characters)
- * 
- * Response:
- * {
- *   "success": boolean,
- *   "message": string,
- *   "uploaded_files": string[] // Array of relative file paths
- * }
+ * Uses custom file validation middleware + form validation
  */
-uploadRoute.post('/', uploadController.uploadFiles.bind(uploadController));
+uploadRoute.post('/', 
+  authMiddleware, 
+  validateUploadFile,  // Validates form data (folder_name)
+  validateFileUpload,  // Custom middleware for file validation
+  UploadController.uploadFiles
+);
 
 /**
  * GET /upload/info
  * Get upload endpoint information and configuration
- * 
- * Response:
- * {
- *   "success": boolean,
- *   "message": string,
- *   "info": {
- *     "max_file_size": string,
- *     "supported_folder_name_length": string,
- *     "folder_name_pattern": string,
- *     "file_naming_format": string,
- *     "default_upload_path": string,
- *     "custom_upload_path": string
- *   }
- * }
  */
-uploadRoute.get('/info', uploadController.getUploadInfo.bind(uploadController));
+uploadRoute.get('/info', 
+  authMiddleware, 
+  validateUploadInfo, 
+  UploadController.getUploadInfo
+);
 
 export { uploadRoute };

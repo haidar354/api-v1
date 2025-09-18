@@ -134,10 +134,10 @@ app.post('/custom-users', validateCustomUser, async (c) => {
 {
   id_role: 1,
   tableName: "users",
-  canCreate: true,
-  canRead: true,
-  canUpdate: false,
-  canDelete: false
+  can_create: true,
+  can_read: true,
+  can_update: false,
+  can_delete: false
 }
 ```
 

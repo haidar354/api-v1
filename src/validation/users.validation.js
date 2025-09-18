@@ -28,18 +28,21 @@ export const userSchema = z.object({
     .min(2, 'Full name must be at least 2 characters')
     .max(255, 'Full name must not exceed 255 characters')
     .regex(/^[a-zA-Z\s.'-]+$/, 'Full name can only contain letters, spaces, dots, apostrophes, and hyphens'),
-
-  email: z.string()
-    .email('Invalid email format')
-    .max(255, 'Email must not exceed 255 characters')
-    .toLowerCase(),
-
+    
   id_role: z.number()
     .int('Role ID must be an integer')
-    .positive('Role ID must be positive')
     .min(0, 'Role ID must be 0 or greater'),
 
   data: z.object({
+    email: z.string()
+      .email('Invalid email format')
+      .max(255, 'Email must not exceed 255 characters')
+      .optional(),
+    password: z.string()
+      .min(6, 'Password must be at least 6 characters')
+      .max(100, 'Password must not exceed 100 characters')
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number')
+      .optional(),
   }).catchall(z.any())
     .refine((val) => {
       if (val && typeof val === 'object') {
@@ -49,41 +52,7 @@ export const userSchema = z.object({
     }, 'User data object is too large'),
 });
 
-/**
- * Dashboard User validation schema (Admin and Principal only)
- */
-export const dashboardUserSchema = z.object({
-  full_name: z.string()
-    .min(2, 'Full name must be at least 2 characters')
-    .max(255, 'Full name must not exceed 255 characters')
-    .regex(/^[a-zA-Z\s.'-]+$/, 'Full name can only contain letters, spaces, dots, apostrophes, and hyphens'),
-
-  email: z.string()
-    .email('Invalid email format')
-    .max(255, 'Email must not exceed 255 characters')
-    .toLowerCase(),
-
-  id_role: z.number()
-    .int('Role ID must be an integer')
-    .refine((val) => val === 0 || val === 1, 'Role ID must be 0 (Admin) or 1 (KepalaSekolah) for dashboard users'),
-
-  data: z.object({
-    password: z.string()
-      .min(6, 'Password must be at least 6 characters')
-      .max(100, 'Password must not exceed 100 characters')
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
-  }).catchall(z.any()) // Allow additional fields
-    .refine((val) => {
-      if (val && typeof val === 'object') {
-        return Object.keys(val).length <= 50; // Reasonable limit for JSON data
-      }
-      return true;
-    }, 'User data object is too large'),
-});
-
 export const createUserSchema = userSchema;
-
-export const createDashboardUserSchema = dashboardUserSchema;
 
 export const updateUserSchema = userSchema.partial();
 
@@ -126,7 +95,7 @@ export const rolePermissionIdSchema = z.object({
  * Bulk operations schemas
  */
 export const bulkCreateUsersSchema = z.object({
-  users: z.array(userSchema)
+  users: z.array(createUserSchema)
     .min(1, 'At least one user is required')
     .max(100, 'Cannot create more than 100 users at once'),
 });
@@ -169,5 +138,3 @@ export const validateRolePermissionId = zValidator('param', rolePermissionIdSche
 
 export const validateBulkCreateUsers = zValidator('json', bulkCreateUsersSchema);
 export const validateBulkUpdateRolePermissions = zValidator('json', bulkUpdateRolePermissionsSchema);
-
-export const validateCreateDashboardUser = zValidator('json', createDashboardUserSchema);

@@ -4,9 +4,11 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
 
-import { usersRoute } from '@routes/users.route.js';
-import { uploadRoute } from '@routes/upload.routes.js';
-import { healthCheck } from '@config/database.js';
+import { usersRoute } from '@routes/users.route';
+import { uploadRoute } from '@routes/upload.routes';
+import { authRoute } from '@routes/auth.routes';
+import { attendanceRoute } from '@routes/attendance.routes';
+import { healthCheck } from '@config/database';
 
 /**
  * Main Hono Application
@@ -44,9 +46,7 @@ const serveStaticFile = async (c, folder) => {
 
     if (!(await file.exists())) {
       return c.json({
-        success: false,
         message: 'File not found',
-        error: 'The requested file does not exist'
       }, 404);
     }
 
@@ -60,9 +60,7 @@ const serveStaticFile = async (c, folder) => {
   } catch (error) {
     console.error('Static file error:', error);
     return c.json({
-      success: false,
       message: 'Error serving file',
-      error: 'Failed to serve static file'
     }, 500);
   }
 };
@@ -109,7 +107,6 @@ app.get('/', (c) => {
  */
 app.get('/health', (c) => {
   return c.json({
-    success: true,
     message: 'API is healthy',
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -122,17 +119,12 @@ app.get('/health/db', async (c) => {
   try {
     const dbHealth = await healthCheck();
     return c.json({
-      success: true,
       message: 'Database health check',
       data: dbHealth,
-      error: null
     });
   } catch (error) {
     return c.json({
-      success: false,
       message: 'Database health check failed',
-      data: null,
-      error: error.message
     }, 503);
   }
 });
@@ -142,16 +134,15 @@ app.get('/health/db', async (c) => {
  */
 app.route('/api/users', usersRoute);
 app.route('/api/upload', uploadRoute);
+app.route('/api/auth', authRoute);
+app.route('/api/attendance', attendanceRoute);
 
 /**
  * 404 Handler
  */
 app.notFound((c) => {
   return c.json({
-    success: false,
     message: 'Endpoint not found',
-    data: null,
-    error: 'The requested resource does not exist'
   }, 404);
 });
 
@@ -162,10 +153,7 @@ app.onError((error, c) => {
   console.error('Global error:', error);
 
   return c.json({
-    success: false,
     message: 'Internal server error',
-    data: null,
-    error: Bun.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
   }, 500);
 });
 

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { eq, and, isNull, like, or, desc, asc, sql, ne } from 'drizzle-orm';
+import { eq, and, isNull, like, or, desc, asc, ne, sql } from 'drizzle-orm';
 import { db } from '@config/database.js';
 import { users, roles } from '@models/index.models.js';
 
@@ -9,140 +9,100 @@ import { users, roles } from '@models/index.models.js';
  */
 export class UsersService {
   /**
-   * Create a new user (without password - for students and staff)
+   * Create a new user
    * @param {Object} userData - User data
    * @returns {Promise<Object>} Created user
    */
   static async createUser(userData) {
     try {
-      // Check if email already exists (excluding soft deleted)
-      const existingUser = await db
-        .select()
-        .from(users)
-        .where(and(
-          eq(users.email, userData.email),
-          isNull(users.deleted_at)
-        ))
+      // Check if the role exists and get can_login property
+      const [role_info] = await db
+        .select({
+          can_login: roles.can_login
+        })
+        .from(roles)
+        .where(eq(roles.id, userData.id_role))
         .limit(1);
 
-      if (existingUser.length > 0) {
-        throw new Error('Email already exists');
+      if (!role_info) {
+        throw new Error('Invalid role ID');
       }
 
-      // Map API fields (snake_case) to Drizzle schema fields (camelCase)
-      const userDataCopy = { ...userData.data };
-      delete userDataCopy.password; // Completely remove password field
-      const userToInsert = {
+      // Prepare user data based on role can_login
+      let final_data = {};
+
+      if (role_info.can_login) {
+        // Role can login - require email and password
+        if (!userData.data || !userData.data.email || !userData.data.password) {
+          throw new Error('Email and password are required for users with login access');
+        }
+
+        // Check if email already exists (excluding soft deleted)
+        const existing_user = await db
+          .select()
+          .from(users)
+          .where(and(
+            sql`JSON_EXTRACT(data, '$.email') = ${userData.data.email}`,
+            isNull(users.deleted_at)
+          ))
+          .limit(1);
+
+        if (existing_user.length > 0) {
+          throw new Error('Email already exists');
+        }
+
+        // Hash password and prepare data
+        const salt_rounds = 12;
+        const hash_password = await bcrypt.hash(userData.data.password, salt_rounds);
+        
+        final_data = {
+          ...userData.data,
+          password: hash_password
+        };
+      } else {
+        // Role cannot login - clean data without email/password
+        const { email, password, ...clean_data } = userData.data || {};
+        final_data = clean_data;
+      }
+
+      const user_to_insert = {
         full_name: userData.full_name,
-        email: userData.email,
         id_role: userData.id_role,
-        data: userDataCopy
+        data: final_data
       };
 
-      // Insert new user (no password handling)
-      const insertResult = await db
+      // Insert new user 
+      const insert_result = await db
         .insert(users)
-        .values(userToInsert);
+        .values(user_to_insert);
 
       // Get the inserted user by ID
-      const insertId = insertResult[0].insertId; // Extract insertId from ResultSetHeader
-      const [newUser] = await db
+      const insert_id = insert_result[0].insertId;
+      const [new_user] = await db
         .select()
         .from(users)
-        .where(eq(users.id, insertId))
+        .where(eq(users.id, insert_id))
         .limit(1);
 
-      if (!newUser || Object.keys(newUser).length === 0) {
+      if (!new_user || Object.keys(new_user).length === 0) {
         throw new Error('Failed to retrieve created user');
       }
 
+      // Return user without password in data
+      const user_response = { ...new_user };
+      if (user_response.data && user_response.data.password) {
+        const { password, ...data_without_password } = user_response.data;
+        user_response.data = data_without_password;
+      }
+
       return {
-        data: newUser,
+        data: user_response,
         status: 201,
         pagination: null
       };
     } catch (error) {
       console.log("ERROR: ", error);
       throw new Error(`Failed to create user: ${error.message}`);
-    }
-  }
-
-  /**
-   * Create a new dashboard user (Admin or Principal with password)
-   * @param {Object} userData - User data with password in data field
-   * @returns {Promise<Object>} Created user without password
-   */
-  static async createDashboardUser(userData) {
-    try {
-      // Validate role (only Admin=0 or KepalaSekolah=1 allowed)
-      if (userData.id_role !== 0 && userData.id_role !== 1) {
-        throw new Error('Dashboard users can only have role Admin (0) or KepalaSekolah (1)');
-      }
-
-      // Extract password from data field
-      const { data, ...userDataWithoutData } = userData;
-      const { password, ...dataWithoutPassword } = data;
-
-      if (!password) {
-        throw new Error('Password is required for dashboard users');
-      }
-
-      // Hash password
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      // Check if email already exists (excluding soft deleted)
-      const existingUser = await db
-        .select()
-        .from(users)
-        .where(and(
-          eq(users.email, userData.email),
-          isNull(users.deleted_at)
-        ))
-        .limit(1);
-
-      if (existingUser.length > 0) {
-        throw new Error('Email already exists');
-      }
-
-      // Map API fields to match Drizzle schema property names
-      const userToInsert = {
-        full_name: userData.full_name,  // Map full_name -> full_name (schema property name)
-        email: userData.email,
-        id_role: userData.id_role,     // Keep as id_role (matches schema property name)
-        password: hashedPassword,
-        data: {
-          ...dataWithoutPassword,
-          password: hashedPassword
-        }, // Store data without password
-      };
-
-      // // Insert new dashboard user
-      const insertResult = await db
-        .insert(users)
-        .values(userToInsert);
-
-      // Get the inserted user by ID
-      const insertId = insertResult[0].insertId;
-      const [newUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, insertId))
-        .limit(1);
-
-      if (!newUser || Object.keys(newUser).length === 0) {
-        throw new Error('Failed to retrieve created user');
-      }
-
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = newUser;
-      return {
-        data: userWithoutPassword,
-        status: 201,
-        pagination: null
-      };
-    } catch (error) {
-      throw new Error(`Failed to create dashboard user: ${error.message}`);
     }
   }
 
@@ -338,7 +298,7 @@ export class UsersService {
           .select()
           .from(users)
           .where(and(
-            eq(users.email, updateData.email),
+            sql`JSON_EXTRACT(data, '$.email') = ${updateData.email}`,
             isNull(users.deleted_at),
             ne(users.id, userId)
           ))
@@ -481,7 +441,7 @@ export class UsersService {
         .select()
         .from(users)
         .where(and(
-          eq(users.email, email),
+          sql`JSON_EXTRACT(data, '$.email') = ${email}`,
           isNull(users.deleted_at)
         ))
         .limit(1);

@@ -23,18 +23,18 @@ export const changePasswordSchema = z.object({
   currentPassword: z.string()
     .min(1, 'Current password is required'),
   
-  newPassword: z.string()
+  new_password: z.string()
     .min(8, 'New password must be at least 8 characters')
     .max(128, 'New password must not exceed 128 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'New password must contain at least one lowercase letter, one uppercase letter, and one number'),
   
-  confirmNewPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  confirm_new_password: z.string(),
+}).refine((data) => data.new_password === data.confirm_new_password, {
   message: 'New passwords do not match',
-  path: ['confirmNewPassword'],
-}).refine((data) => data.currentPassword !== data.newPassword, {
+  path: ['confirm_new_password'],
+}).refine((data) => data.currentPassword !== data.new_password, {
   message: 'New password must be different from current password',
-  path: ['newPassword'],
+  path: ['new_password'],
 });
 
 /**
@@ -56,15 +56,15 @@ export const resetPasswordSchema = z.object({
     .min(1, 'Reset token is required')
     .max(255, 'Invalid reset token'),
   
-  newPassword: z.string()
+  new_password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password must not exceed 128 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
   
-  confirmNewPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  confirm_new_password: z.string(),
+}).refine((data) => data.new_password === data.confirm_new_password, {
   message: 'Passwords do not match',
-  path: ['confirmNewPassword'],
+  path: ['confirm_new_password'],
 });
 
 /**

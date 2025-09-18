@@ -4,7 +4,7 @@
     "paths": {
       "@config/*": ["./src/config/*"],
       "@models/*": ["./src/models/*"],
-      "@middleware/*": ["./src/middleware/*"],
+      "@middlewares/*": ["./src/middlewares/*"],
       "@utils/*": ["./src/utils/*"],
       "@validation/*": ["./src/validation/*"],
       "@routes/*": ["./src/routes/*"],
@@ -12,23 +12,12 @@
       "@services/*": ["./src/services/*"],
       "@src/*": ["./src/*"]
     },
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": false,
+    "moduleResolution": "node",
+    "checkJs": false,               // don’t type-check JS files
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": false,
-    "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build"]
 }

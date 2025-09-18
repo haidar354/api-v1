@@ -24,23 +24,6 @@ export class UsersController {
   }
 
   /**
-   * Create a new dashboard user (Admin or Principal with password)
-   * POST /users/dashboard
-   */
-  static async createDashboardUser(c) {
-    try {
-      const userData = c.req.valid('json');
-
-      const response = await UsersService.createDashboardUser(userData);
-
-      // Return the response directly since it's already a proper Response object
-      return jsonResponse(response.data, response.status);
-    } catch (error) {
-      return errorResponse(error.message, 500);
-    }
-  }
-
-  /**
    * Get all users with pagination and filtering
    * GET /users
    */
@@ -110,7 +93,7 @@ export class UsersController {
       const response = await UsersService.deleteUser(parseInt(id));
 
       // Return the response directly since it's already a proper Response object
-      return jsonResponse({message: response.data === false ? "Data berhasil dihapus" : "Data gagal dihapus"}, response.status);
+      return jsonResponse({ message: response.data === false ? "Data berhasil dihapus" : "Data gagal dihapus" }, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
     }
@@ -158,10 +141,7 @@ export class UsersController {
 
       if (!query || query.trim().length < 2) {
         return c.json({
-          success: false,
           message: 'Search query must be at least 2 characters',
-          data: null,
-          error: 'Invalid search query'
         }, 400);
       }
 
@@ -267,14 +247,9 @@ export class UsersController {
       const response = await UsersService.getAllUsers({ limit: 1 });
       if (response.status >= 200 && response.status < 300) {
         return jsonResponse({
-          success: true,
-          message: 'Users service is healthy',
-          data: {
-            status: 'healthy',
-            timestamp: new Date().toISOString(),
-            totalUsers: response.pagination?.total_items || 0
-          },
-          error: null
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          totalUsers: response.pagination?.total_items || 0
         }, 200);
       } else {
         throw new Error('Service health check failed');

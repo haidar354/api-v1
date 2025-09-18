@@ -110,17 +110,21 @@ export const guestSchema = z.object({
     .min(5, 'Purpose must be at least 5 characters')
     .max(255, 'Purpose must not exceed 255 characters')
     .transform((val) => val.trim()),
-
-  visit_date: z.string()
+    
+    visit_date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/, 'Visit date must be in ISO 8601 format')
     .refine((date) => {
       const parsedDate = new Date(date);
       const now = new Date();
       const oneMonthFromNow = new Date();
       oneMonthFromNow.setMonth(now.getMonth() + 1);
-
+      
       return parsedDate >= now && parsedDate <= oneMonthFromNow;
     }, 'Visit date must be in the future but not more than 1 month ahead'),
+    signature: z.string()
+      .min(5, 'Signature must be at least 5 characters')
+      .max(255, 'Signature must not exceed 255 characters')
+      .transform((val) => val.trim()),
 });
 
 export const createGuestSchema = guestSchema;
@@ -215,5 +219,9 @@ export const validateCreateGuest = zValidator('json', createGuestSchema);
 export const validateUpdateGuest = zValidator('json', updateGuestSchema);
 export const validateGuestId = zValidator('param', guestIdSchema);
 export const validateGuestQuery = zValidator('query', guestQuerySchema);
+
+// Form validators for guest operations (for form-data with file uploads)
+export const validateCreateGuestForm = zValidator('form', guestSchema.omit({ signature: true }));
+export const validateUpdateGuestForm = zValidator('form', updateGuestSchema.omit({ signature: true }));
 
 export const validateAttendanceReport = zValidator('json', attendanceReportSchema);

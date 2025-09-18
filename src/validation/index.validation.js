@@ -9,6 +9,7 @@ export * from './users.validation.js';
 export * from './attendance.validation.js';
 export * from './academic.validation.js';
 export * from './classes.validation.js';
+export * from './upload.validation.js';
 
 // Re-export commonly used validators for convenience
 import {
@@ -29,7 +30,6 @@ import {
   validateRoleId,
   validateCreateRolePermission,
   validateUpdateRolePermission,
-  validateCreateDashboardUser,
 } from './users.validation.js';
 
 import {
@@ -41,6 +41,8 @@ import {
   validateUpdateGuest,
   validateGuestId,
   validateGuestQuery,
+  validateCreateGuestForm,
+  validateUpdateGuestForm,
 } from './attendance.validation.js';
 
 import {
@@ -66,6 +68,14 @@ import {
   validateClassQuery,
 } from './classes.validation.js';
 
+import {
+  validateUploadFile,
+  validateUploadInfo,
+  validateBulkFileOperation,
+  validateFileSearch,
+  validateFileUpload,
+} from './upload.validation.js';
+
 /**
  * Common validators object for easy access
  */
@@ -85,7 +95,6 @@ export const validators = {
     update: validateUpdateUser,
     id: validateUserId,
     query: validateUserQuery,
-    createDashboardUser: validateCreateDashboardUser,
   },
 
   roles: {
@@ -112,6 +121,8 @@ export const validators = {
     update: validateUpdateGuest,
     id: validateGuestId,
     query: validateGuestQuery,
+    createForm: validateCreateGuestForm,
+    updateForm: validateUpdateGuestForm,
   },
 
   // Academic Management
@@ -149,6 +160,15 @@ export const validators = {
     update: validateUpdateClass,
     id: validateClassId,
     query: validateClassQuery,
+  },
+
+  // Upload and File Management
+  upload: {
+    uploadFile: validateUploadFile,
+    uploadInfo: validateUploadInfo,
+    bulkFileOperation: validateBulkFileOperation,
+    fileSearch: validateFileSearch,
+    fileUpload: validateFileUpload, // Custom middleware
   },
 };
 
