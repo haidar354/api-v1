@@ -11,6 +11,7 @@ import {
   validateClassId,
   validateClassQuery,
   validateBulkCreateClasses,
+  validateClassWithDepartmentsQuery,
 } from '@validation/index.validation.js';
 import { authMiddleware } from "@middlewares/auth.middleware.js";
 
@@ -37,6 +38,12 @@ classesRoute.get('/stats/departments', authMiddleware, ClassesController.getClas
  * GET /classes/search?q=searchTerm&limit=10
  */
 classesRoute.get('/search', authMiddleware, ClassesController.searchClasses);
+
+/**
+ * Get all classes with formatted department names
+ * GET /classes/with-departments?page=1&limit=10&id_academic_year=1&include_relations=true
+ */
+classesRoute.get('/with-departments', validateClassWithDepartmentsQuery, authMiddleware, ClassesController.getAllClassWithDepartments);
 
 /**
  * Bulk create departments
@@ -73,6 +80,12 @@ classesRoute.put('/departments/:id', validateDepartmentId, validateUpdateDepartm
  * DELETE /classes/departments/:id
  */
 classesRoute.delete('/departments/:id', validateDepartmentId, authMiddleware, ClassesController.deleteDepartment);
+
+/**
+ * Restore soft deleted department by ID
+ * POST /classes/departments/:id/restore
+ */
+classesRoute.post('/departments/:id/restore', validateDepartmentId, authMiddleware, ClassesController.restoreDepartment);
 
 /**
  * Bulk create classes
@@ -121,5 +134,11 @@ classesRoute.put('/:id', validateClassId, validateUpdateClass, authMiddleware, C
  * DELETE /classes/:id
  */
 classesRoute.delete('/:id', validateClassId, authMiddleware, ClassesController.deleteClass);
+
+/**
+ * Restore soft deleted class by ID
+ * POST /classes/:id/restore
+ */
+classesRoute.post('/:id/restore', validateClassId, authMiddleware, ClassesController.restoreClass);
 
 export { classesRoute };

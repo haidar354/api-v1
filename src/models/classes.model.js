@@ -8,6 +8,8 @@ import { academicYears } from './academic.model.js';
 export const departments = mysqlTable('departments', {
   id: int('id').primaryKey().autoincrement(),
   name: varchar('name', { length: 100 }).notNull(),
+  short_name: varchar('short_name', { length: 8 }).notNull(),
+  code: varchar('code', { length: 10 }).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
   deleted_at: timestamp('deleted_at'),

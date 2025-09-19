@@ -17,7 +17,7 @@ export const updateRoleSchema = roleSchema.partial();
 
 export const roleIdSchema = z.object({
   id: z.string().transform((val) => parseInt(val, 10))
-    .refine((val) => !isNaN(val) && val > 0, 'Invalid role ID bos'),
+    .refine((val) => !isNaN(val) && val > 0, 'Invalid role ID'),
 });
 
 /**
@@ -120,6 +120,29 @@ export const userQuerySchema = z.object({
   search: z.string().optional().transform((val) => val?.trim()),
 });
 
+export const roleQuerySchema = z.object({
+  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
+    .refine((val) => val > 0, 'Page must be positive'),
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+  search: z.string().optional().transform((val) => val?.trim()),
+  sortBy: z.string().optional().default('created_at'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+export const rolePermissionQuerySchema = z.object({
+  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
+    .refine((val) => val > 0, 'Page must be positive'),
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+  search: z.string().optional().transform((val) => val?.trim()),
+  role: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (!isNaN(val) && val >= 0), 'Invalid role ID'),
+  table_name: z.string().optional().transform((val) => val?.trim()),
+  sortBy: z.string().optional().default('created_at'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
 /**
  * Hono validators for easy use in routes
  */
@@ -131,10 +154,12 @@ export const validateUserQuery = zValidator('query', userQuerySchema);
 export const validateCreateRole = zValidator('json', createRoleSchema);
 export const validateUpdateRole = zValidator('json', updateRoleSchema);
 export const validateRoleId = zValidator('param', roleIdSchema);
+export const validateRoleQuery = zValidator('query', roleQuerySchema);
 
 export const validateCreateRolePermission = zValidator('json', createRolePermissionSchema);
 export const validateUpdateRolePermission = zValidator('json', updateRolePermissionSchema);
 export const validateRolePermissionId = zValidator('param', rolePermissionIdSchema);
+export const validateRolePermissionQuery = zValidator('query', rolePermissionQuerySchema);
 
 export const validateBulkCreateUsers = zValidator('json', bulkCreateUsersSchema);
 export const validateBulkUpdateRolePermissions = zValidator('json', bulkUpdateRolePermissionsSchema);

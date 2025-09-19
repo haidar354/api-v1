@@ -88,8 +88,27 @@ export class ClassesController {
 
       const response = await ClassesService.deleteDepartment(parseInt(id));
 
-      return jsonResponse({ 
-        message: response.data ? "Department berhasil dihapus" : "Department gagal dihapus" 
+      return jsonResponse({
+        message: response.status === 200 ? "Department berhasil dihapus" : "Department gagal dihapus"
+      }, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
+  /**
+   * Restore soft deleted department by ID
+   * POST /classes/departments/:id/restore
+   */
+  static async restoreDepartment(c) {
+    try {
+      const { id } = c.req.valid('param');
+
+      const response = await ClassesService.restoreDepartment(parseInt(id));
+
+      return jsonResponse({
+        message: "Department berhasil dipulihkan",
+        data: response.data
       }, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -106,12 +125,7 @@ export class ClassesController {
 
       const response = await ClassesService.bulkCreateDepartments(departments_data);
 
-      return jsonResponse({
-        success: response.data.errors.length === 0,
-        message: `Bulk operation completed. ${response.data.summary.successful} departments created, ${response.data.summary.failed} failed`,
-        data: response.data,
-        error: response.data.errors.length > 0 ? 'Some departments failed to create' : null
-      }, response.status);
+      return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -142,6 +156,22 @@ export class ClassesController {
       const query_params = c.req.valid('query');
 
       const response = await ClassesService.getAllClasses(query_params);
+
+      return jsonResponse(response.data, response.status, response.pagination);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
+  /**
+   * Get all classes with formatted department names
+   * GET /classes/with-departments
+   */
+  static async getAllClassWithDepartments(c) {
+    try {
+      const query_params = c.req.valid('query');
+
+      const response = await ClassesService.getAllClassWithDepartments(query_params);
 
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
@@ -203,8 +233,8 @@ export class ClassesController {
 
       const response = await ClassesService.deleteClass(parseInt(id));
 
-      return jsonResponse({ 
-        message: response.data ? "Class berhasil dihapus" : "Class gagal dihapus" 
+      return jsonResponse({
+        message: response.status === 200 ? "Class berhasil dihapus" : "Class gagal dihapus"
       }, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -324,9 +354,9 @@ export class ClassesController {
       // Simple health check by counting classes and departments
       const classes_response = await ClassesService.getAllClasses({ limit: 1 });
       const departments_response = await ClassesService.getAllDepartments({ limit: 1 });
-      
+
       if (classes_response.status >= 200 && classes_response.status < 300 &&
-          departments_response.status >= 200 && departments_response.status < 300) {
+        departments_response.status >= 200 && departments_response.status < 300) {
         return jsonResponse({
           status: 'healthy',
           timestamp: new Date().toISOString(),

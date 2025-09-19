@@ -10,6 +10,18 @@ export const departmentSchema = z.object({
     .max(100, 'Department name must not exceed 100 characters')
     .regex(/^[a-zA-Z\s&()-]+$/, 'Department name can only contain letters, spaces, and common symbols (&, -, (), )')
     .transform((val) => val.trim()),
+
+  short_name: z.string()
+    .min(1, 'Short name is required')
+    .max(8, 'Short name must not exceed 8 characters')
+    .regex(/^[A-Z0-9]+$/, 'Short name can only contain uppercase letters and numbers')
+    .transform((val) => val.trim().toUpperCase()),
+
+  code: z.string()
+    .min(1, 'Code is required')
+    .max(10, 'Code must not exceed 10 characters')
+    .regex(/^[A-Z0-9-]+$/, 'Code can only contain uppercase letters, numbers, and hyphens')
+    .transform((val) => val.trim().toUpperCase()),
 });
 
 export const createDepartmentSchema = departmentSchema;
@@ -135,13 +147,31 @@ export const classQuerySchema = z.object({
 
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
     .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+
+  include_relations: z.string().optional().transform((val) => val ? val === 'true' : false),
+});
+
+/**
+ * Class with departments query schema for formatted class names
+ */
+export const classWithDepartmentsQuerySchema = z.object({
+  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
+    .refine((val) => val > 0, 'Page must be positive'),
+
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+
+  id_academic_year: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || val > 0, 'Academic year ID must be positive'),
+
+  include_relations: z.string().optional().transform((val) => val ? val === 'true' : false),
 });
 
 /**
  * Class assignment validation schemas
  */
 export const classAssignmentSchema = z.object({
-  classId: z.number()
+  id_class: z.number()
     .int('Class ID must be an integer')
     .positive('Class ID must be positive'),
 
@@ -178,7 +208,7 @@ export const bulkClassAssignmentSchema = z.object({
       // Check for duplicate user-class-role combinations
       const combinations = new Set();
       for (const assignment of assignments) {
-        const combo = `${assignment.userId}-${assignment.classId}-${assignment.role}`;
+        const combo = `${assignment.userId}-${assignment.id_class}-${assignment.role}`;
         if (combinations.has(combo)) {
           return false;
         }
@@ -192,7 +222,7 @@ export const bulkClassAssignmentSchema = z.object({
  * Class statistics validation schemas
  */
 export const classStatsSchema = z.object({
-  classId: z.number().int().positive(),
+  id_class: z.number().int().positive(),
   includeAttendance: z.boolean().default(false),
   includeGrades: z.boolean().default(false),
   startDate: z.string().optional()
@@ -213,7 +243,7 @@ export const classStatsSchema = z.object({
  * Class schedule validation schemas
  */
 export const classScheduleSchema = z.object({
-  classId: z.number()
+  id_class: z.number()
     .int('Class ID must be an integer')
     .positive('Class ID must be positive'),
 
@@ -269,3 +299,4 @@ export const validateBulkClassAssignment = zValidator('json', bulkClassAssignmen
 
 export const validateClassStats = zValidator('json', classStatsSchema);
 export const validateClassSchedule = zValidator('json', classScheduleSchema);
+export const validateClassWithDepartmentsQuery = zValidator('query', classWithDepartmentsQuerySchema);

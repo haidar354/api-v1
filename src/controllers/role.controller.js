@@ -88,7 +88,7 @@ export class RoleController {
       const response = await RoleService.deleteRole(parseInt(id));
 
       return jsonResponse(
-        { message: response.data ? "Role berhasil dihapus" : "Role gagal dihapus" },
+        { message: response.sstatus === 200 ? "Role berhasil dihapus" : "Role gagal dihapus" },
         response.status
       );
     } catch (error) {
@@ -153,7 +153,7 @@ export class RoleController {
   static async getAllRolePermissions(c) {
     try {
       const query_params = c.req.valid('query');
-      console.log("QUERY PARAMS: ", query_params);
+
       const response = await RoleService.getAllRolePermissions(query_params);
 
       return jsonResponse(response.data, response.status, response.pagination);
@@ -208,9 +208,8 @@ export class RoleController {
       const { id } = c.req.valid('param');
 
       const response = await RoleService.deleteRolePermission(parseInt(id));
-
       return jsonResponse(
-        { message: response.data ? "Role permission berhasil dihapus" : "Role permission gagal dihapus" },
+        { message: response.status === 200 ? "Role permission berhasil dihapus" : "Role permission gagal dihapus" },
         response.status
       );
     } catch (error) {

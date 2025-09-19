@@ -1,4 +1,4 @@
-import { eq, and, isNull, like, or, desc, asc, ne, sql } from 'drizzle-orm';
+import { eq, and, isNull, like, or, desc, asc, ne, sql, isNotNull } from 'drizzle-orm';
 import { db } from '@config/database.js';
 import { classes, departments, academicYears } from '@models/index.models.js';
 
@@ -14,18 +14,18 @@ export class ClassesService {
    */
   static async createDepartment(departmentData) {
     try {
-      // Check if department name already exists (excluding soft deleted)
-      const existing_department = await db
+
+      // Check if code already exists
+      const existing_code = await db
         .select()
         .from(departments)
         .where(and(
-          eq(departments.name, departmentData.name),
-          isNull(departments.deleted_at)
+          eq(departments.code, departmentData.code),
         ))
         .limit(1);
 
-      if (existing_department.length > 0) {
-        throw new Error('Department name already exists');
+      if (existing_code.length > 0) {
+        throw new Error('Department code already exists');
       }
 
       // Insert new department
@@ -34,11 +34,11 @@ export class ClassesService {
         .values(departmentData);
 
       // Get the inserted department by ID
-      const insert_id = insert_result[0].insertId;
+      const id_insert = insert_result[0].insertId;
       const [new_department] = await db
         .select()
         .from(departments)
-        .where(eq(departments.id, insert_id))
+        .where(eq(departments.id, id_insert))
         .limit(1);
 
       if (!new_department || Object.keys(new_department).length === 0) {
@@ -251,6 +251,72 @@ export class ClassesService {
   }
 
   /**
+   * Restore soft deleted department by ID
+   * @param {number} departmentId - Department ID
+   * @returns {Promise<Object>} Restored department
+   */
+  static async restoreDepartment(departmentId) {
+    try {
+      // Check if department exists and is soft deleted
+
+      const [soft_deleted_department] = await db
+        .select()
+        .from(departments)
+        .where(and(
+          eq(departments.id, departmentId),
+          isNotNull(departments.deleted_at)
+        ))
+        .limit(1);
+
+      if (!soft_deleted_department) {
+        throw new Error('Department not found or not deleted');
+      }
+
+      const existing_code = await db
+        .select()
+        .from(departments)
+        .where(and(
+          eq(departments.code, soft_deleted_department.code),
+          isNull(departments.deleted_at),
+          ne(departments.id, departmentId)
+        ))
+        .limit(1);
+
+      if (existing_code.length > 0) {
+        throw new Error('Cannot restore: Department code already exists');
+      }
+
+      const [update_result, _] = await db
+        .update(departments)
+        .set({ deleted_at: null })
+        .where(eq(departments.id, departmentId));
+
+      const success = update_result.affectedRows > 0;
+
+      console.log("Success: ", success);
+
+      if (!success) {
+        throw new Error('Failed to restore department');
+      }
+
+      // Get the restored department
+      const [restored_department] = await db
+        .select()
+        .from(departments)
+        .where(eq(departments.id, departmentId))
+        .limit(1);
+
+      return {
+        data: restored_department,
+        status: 200,
+        pagination: null
+      };
+    } catch (error) {
+      throw new Error(`Failed to restore department: ${error.message}`);
+    }
+  }
+
+  /**
    * Create a new class
    * @param {Object} classData - Class data
    * @returns {Promise<Object>} Created class
@@ -300,7 +366,7 @@ export class ClassesService {
         .values(classData);
 
       // Get the inserted class by ID
-      const insert_id = insert_result[0].insertId;
+      const id_insert = insert_result[0].insertId;
       const [new_class] = await db
         .select({
           id: classes.id,
@@ -317,13 +383,13 @@ export class ClassesService {
           academic_year: {
             id: academicYears.id,
             year: academicYears.year,
-            semester: academicYears.semester,
+            is_active: academicYears.is_active,
           }
         })
         .from(classes)
         .leftJoin(departments, eq(classes.id_department, departments.id))
         .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
-        .where(eq(classes.id, insert_id))
+        .where(eq(classes.id, id_insert))
         .limit(1);
 
       if (!new_class || Object.keys(new_class).length === 0) {
@@ -415,7 +481,7 @@ export class ClassesService {
             academic_year: {
               id: academicYears.id,
               year: academicYears.year,
-              semester: academicYears.semester,
+              is_active: academicYears.is_active,
             }
           })
           .from(classes)
@@ -489,7 +555,7 @@ export class ClassesService {
             academic_year: {
               id: academicYears.id,
               year: academicYears.year,
-              semester: academicYears.semester,
+              is_active: academicYears.is_active,
             }
           })
           .from(classes)
@@ -631,7 +697,93 @@ export class ClassesService {
         pagination: null
       };
     } catch (error) {
+      console.log(error);
       throw new Error(`Failed to delete class: ${error.message}`);
+    }
+  }
+
+  /**
+   * Restore soft deleted class by ID
+   * @param {number} classId - Class ID
+   * @returns {Promise<Object>} Restored class
+   */
+  static async restoreClass(classId) {
+    try {
+      // Check if class exists and is soft deleted
+      const [soft_deleted_class] = await db
+        .select()
+        .from(classes)
+        .where(and(
+          eq(classes.id, classId),
+          ne(classes.deleted_at, null)
+        ))
+        .limit(1);
+
+      if (!soft_deleted_class) {
+        throw new Error('Class not found or not deleted');
+      }
+
+      // Check if department still exists and is active
+      const department_result = await this.getDepartmentById(soft_deleted_class.id_department);
+      if (!department_result.data) {
+        throw new Error('Cannot restore: Department no longer exists or is deleted');
+      }
+
+      // Check if academic year still exists and is active
+      const [academic_year] = await db
+        .select()
+        .from(academicYears)
+        .where(and(
+          eq(academicYears.id, soft_deleted_class.id_academic_year),
+          isNull(academicYears.deleted_at)
+        ))
+        .limit(1);
+
+      if (!academic_year) {
+        throw new Error('Cannot restore: Academic year no longer exists or is deleted');
+      }
+
+      // Check for conflicts with existing active classes
+      const existing_class = await db
+        .select()
+        .from(classes)
+        .where(and(
+          eq(classes.grade, soft_deleted_class.grade),
+          eq(classes.id_department, soft_deleted_class.id_department),
+          eq(classes.id_academic_year, soft_deleted_class.id_academic_year),
+          soft_deleted_class.subgrade ? eq(classes.subgrade, soft_deleted_class.subgrade) : isNull(classes.subgrade),
+          isNull(classes.deleted_at),
+          ne(classes.id, classId)
+        ))
+        .limit(1);
+
+      if (existing_class.length > 0) {
+        throw new Error('Cannot restore: Class with same grade, subgrade, department, and academic year already exists');
+      }
+
+      // Restore by setting deleted_at to null
+      const update_result = await db
+        .update(classes)
+        .set({ deleted_at: null })
+        .where(eq(classes.id, classId));
+
+      // Check if the update was successful
+      const success = update_result.affectedRows > 0;
+
+      if (!success) {
+        throw new Error('Failed to restore class');
+      }
+
+      // Get the restored class with relations
+      const restored_class_result = await this.getClassById(classId, true);
+
+      return {
+        data: restored_class_result.data,
+        status: 200,
+        pagination: null
+      };
+    } catch (error) {
+      throw new Error(`Failed to restore class: ${error.message}`);
     }
   }
 
@@ -742,6 +894,85 @@ export class ClassesService {
       };
     } catch (error) {
       throw new Error(`Failed to get classes stats by department: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get all classes with formatted class names (grade + department short_name + subgrade)
+   * @param {Object} options - Query options
+   * @returns {Promise<Object>} Classes list with formatted names and pagination info
+   */
+  static async getAllClassWithDepartments(options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        id_academic_year = '',
+        include_relations = false
+      } = options;
+
+      const offset = (page - 1) * limit;
+
+      // Build where conditions
+      const where_conditions = [isNull(classes.deleted_at)];
+
+      if (id_academic_year) {
+        where_conditions.push(eq(classes.id_academic_year, parseInt(id_academic_year)));
+      }
+
+      // Build the select fields based on include_relations
+      let select_fields;
+      if (include_relations) {
+        select_fields = {
+          id: classes.id,
+          class: sql`CONCAT(${classes.grade}, ' ', ${departments.short_name}, COALESCE(CONCAT(' ', ${classes.subgrade}), ''))`,
+          id_academic_year: classes.id_academic_year,
+          academic_years: {
+            id: academicYears.id,
+            year: academicYears.year,
+          }
+        };
+      } else {
+        select_fields = {
+          id: classes.id,
+          class: sql`CONCAT(${classes.grade}, ' ', ${departments.short_name}, COALESCE(CONCAT(' ', ${classes.subgrade}), ''))`,
+          id_academic_year: classes.id_academic_year,
+        };
+      }
+
+      // Query classes with formatted names
+      const classes_list = await db
+        .select(select_fields)
+        .from(classes)
+        .leftJoin(departments, eq(classes.id_department, departments.id))
+        .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
+        .where(and(...where_conditions))
+        .orderBy(desc(classes.created_at))
+        .limit(limit)
+        .offset(offset);
+
+      // Get total count for pagination
+      const [{ count }] = await db
+        .select({ count: sql`count(*)` })
+        .from(classes)
+        .where(and(...where_conditions));
+
+      const total_pages = Math.ceil(count / limit);
+
+      return {
+        data: classes_list,
+        status: 200,
+        pagination: {
+          current_page: page,
+          total_pages,
+          total_items: count,
+          items_per_page: limit,
+          has_next_page: page < total_pages,
+          has_prev_page: page > 1,
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to get classes with departments: ${error.message}`);
     }
   }
 }

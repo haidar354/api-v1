@@ -9,6 +9,8 @@ export * from './users.validation.js';
 export * from './attendance.validation.js';
 export * from './academic.validation.js';
 export * from './classes.validation.js';
+export * from './students.validation.js';
+export * from './teachers.validation.js';
 export * from './upload.validation.js';
 
 // Re-export commonly used validators for convenience
@@ -66,7 +68,24 @@ import {
   validateUpdateClass,
   validateClassId,
   validateClassQuery,
+  validateClassWithDepartmentsQuery,
 } from './classes.validation.js';
+
+import {
+  validateCreateStudent,
+  validateUpdateStudent,
+  validateStudentId,
+  validateStudentQuery,
+  validateBulkCreateStudents,
+} from './students.validation.js';
+
+import {
+  validateCreateTeacher,
+  validateUpdateTeacher,
+  validateTeacherId,
+  validateTeacherQuery,
+  validateBulkCreateTeachers,
+} from './teachers.validation.js';
 
 import {
   validateUploadFile,
@@ -160,6 +179,22 @@ export const validators = {
     update: validateUpdateClass,
     id: validateClassId,
     query: validateClassQuery,
+  },
+
+  students: {
+    create: validateCreateStudent,
+    update: validateUpdateStudent,
+    id: validateStudentId,
+    query: validateStudentQuery,
+    bulkCreate: validateBulkCreateStudents,
+  },
+
+  teachers: {
+    create: validateCreateTeacher,
+    update: validateUpdateTeacher,
+    id: validateTeacherId,
+    query: validateTeacherQuery,
+    bulkCreate: validateBulkCreateTeachers,
   },
 
   // Upload and File Management

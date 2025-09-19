@@ -11,13 +11,77 @@ import {
   validateUpdateGuestForm,
   validateGuestId,
   validateGuestQuery,
+  validateAttendanceByClass,
 } from '@validation/attendance.validation.js';
+
 
 /**
  * Attendance Routes
  * Defines all routes related to attendance and guest management
  */
 const attendanceRoute = new Hono();
+
+// ==================== GUEST ROUTES ====================
+
+/**
+ * POST /attendance/guests
+ * Create new guest record with signature upload
+ * Uses form-data for signature file upload
+ */
+attendanceRoute.post('/guests',
+  validateCreateGuestForm,
+  AttendanceController.createGuest
+);
+
+/**
+ * GET /attendance/guests
+ * Get guest records with filtering and pagination
+ */
+attendanceRoute.get('/guests',
+  validateGuestQuery,
+  AttendanceController.getGuests
+);
+
+/**
+ * GET /attendance/guests/:id
+ * Get guest record by ID
+ */
+attendanceRoute.get('/guests/:id',
+  validateGuestId,
+  AttendanceController.getGuestById
+);
+
+/**
+ * PUT /attendance/guests/:id
+ * Update guest record with optional signature upload
+ * Uses form-data for signature file upload
+ */
+attendanceRoute.put('/guests/:id',
+  authMiddleware,
+  validateGuestId,
+  validateUpdateGuestForm,
+  AttendanceController.updateGuest
+);
+
+/**
+ * DELETE /attendance/guests/:id
+ * Delete guest record
+ */
+attendanceRoute.delete('/guests/:id',
+  authMiddleware,
+  validateGuestId,
+  AttendanceController.deleteGuest
+);
+
+/**
+ * POST /attendance/guests/:id/restore
+ * Restore guest record
+ */
+attendanceRoute.post('/guests/:id/restore',
+  authMiddleware,
+  validateGuestId,
+  AttendanceController.restoreGuest
+);
 
 // ==================== ATTENDANCE ROUTES ====================
 
@@ -36,9 +100,17 @@ attendanceRoute.post('/',
  * Get attendance records with filtering and pagination
  */
 attendanceRoute.get('/',
-  authMiddleware,
   validateAttendanceQuery,
   AttendanceController.getAttendances
+);
+
+/**
+ * GET /attendance/class
+ * Get attendance statistics by class
+ */
+attendanceRoute.get('/class',
+  validateAttendanceByClass,
+  AttendanceController.getAttendanceByClass
 );
 
 /**
@@ -46,7 +118,6 @@ attendanceRoute.get('/',
  * Get attendance statistics
  */
 attendanceRoute.get('/stats',
-  authMiddleware,
   AttendanceController.getAttendanceStats
 );
 
@@ -100,59 +171,14 @@ attendanceRoute.delete('/:id',
   AttendanceController.deleteAttendance
 );
 
-// ==================== GUEST ROUTES ====================
-
 /**
- * POST /attendance/guests
- * Create new guest record with signature upload
- * Uses form-data for signature file upload
+ * POST /attendance/:id/restore
+ * Restore attendance record
  */
-attendanceRoute.post('/guests',
+attendanceRoute.post('/:id/restore',
   authMiddleware,
-  validateCreateGuestForm,
-  AttendanceController.createGuest
-);
-
-/**
- * GET /attendance/guests
- * Get guest records with filtering and pagination
- */
-attendanceRoute.get('/guests',
-  authMiddleware,
-  validateGuestQuery,
-  AttendanceController.getGuests
-);
-
-/**
- * GET /attendance/guests/:id
- * Get guest record by ID
- */
-attendanceRoute.get('/guests/:id',
-  authMiddleware,
-  validateGuestId,
-  AttendanceController.getGuestById
-);
-
-/**
- * PUT /attendance/guests/:id
- * Update guest record with optional signature upload
- * Uses form-data for signature file upload
- */
-attendanceRoute.put('/guests/:id',
-  authMiddleware,
-  validateGuestId,
-  validateUpdateGuestForm,
-  AttendanceController.updateGuest
-);
-
-/**
- * DELETE /attendance/guests/:id
- * Delete guest record
- */
-attendanceRoute.delete('/guests/:id',
-  authMiddleware,
-  validateGuestId,
-  AttendanceController.deleteGuest
+  validateAttendanceId,
+  AttendanceController.restoreAttendance
 );
 
 export { attendanceRoute };

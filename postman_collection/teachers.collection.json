@@ -1,0 +1,635 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Teachers API",
+    "description": "Complete API collection for teacher management endpoints in the school management system. Includes CRUD operations, bulk operations, search, and statistics.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Teachers Service Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/health",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "health"]
+            },
+            "description": "Check teachers service health status with statistics"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints for monitoring teachers service status"
+    },
+    {
+      "name": "Teacher Management",
+      "item": [
+        {
+          "name": "Get All Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of teachers per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by NIP or teacher name",
+                  "disabled": true
+                },
+                {
+                  "key": "class",
+                  "value": "",
+                  "description": "Filter by class ID",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, nip)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all teachers with pagination, filtering, and sorting options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "1"]
+            },
+            "description": "Get a specific teacher by their ID with user and class information"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 1,\n  \"id_class\": 1,\n  \"nip\": \"197001011998021001\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers"]
+            },
+            "description": "Create a new teacher. Requires existing user and class IDs, and unique NIP."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Teacher",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_class\": 2,\n  \"nip\": \"197001011998021001\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "1"]
+            },
+            "description": "Update an existing teacher by ID. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Teacher (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "1"]
+            },
+            "description": "Soft delete a teacher by ID. Teacher will be marked as deleted but not removed from database."
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/1/restore",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "1", "restore"]
+            },
+            "description": "Restore a soft-deleted teacher by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "Basic CRUD operations for teacher management"
+    },
+    {
+      "name": "Search & Filter",
+      "item": [
+        {
+          "name": "Search Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/search?q=1970&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "1970",
+                  "description": "Search query for NIP or teacher name (minimum 2 characters)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of results (default 10)"
+                }
+              ]
+            },
+            "description": "Search teachers by NIP or teacher name with a query string"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teachers by Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/class/1?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "class", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Teachers per page"
+                }
+              ]
+            },
+            "description": "Get all teachers assigned to a specific class"
+          },
+          "response": []
+        }
+      ],
+      "description": "Search and filtering endpoints for finding specific teachers"
+    },
+    {
+      "name": "Bulk Operations",
+      "item": [
+        {
+          "name": "Bulk Create Teachers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teachers\": [\n    {\n      \"id_user\": 1,\n      \"id_class\": 1,\n      \"nip\": \"197001011998021001\"\n    },\n    {\n      \"id_user\": 2,\n      \"id_class\": 1,\n      \"nip\": \"197002021998021002\"\n    },\n    {\n      \"id_user\": 3,\n      \"id_class\": 2,\n      \"nip\": \"197003031998021003\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/bulk",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "bulk"]
+            },
+            "description": "Create multiple teachers at once. Maximum 100 teachers per request. Returns partial success info if some teachers fail."
+          },
+          "response": []
+        }
+      ],
+      "description": "Bulk operations for creating multiple teachers efficiently"
+    },
+    {
+      "name": "Statistics & Reports",
+      "item": [
+        {
+          "name": "Teachers Statistics by Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/stats/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "stats", "classes"]
+            },
+            "description": "Get teacher count statistics grouped by class"
+          },
+          "response": []
+        }
+      ],
+      "description": "Statistical endpoints for teacher analytics and reporting"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Create Math Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 5,\n  \"id_class\": 1,\n  \"nip\": \"197501011998021001\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers"]
+            },
+            "description": "Example: Create a math teacher for Class 1"
+          },
+          "response": []
+        },
+        {
+          "name": "Create English Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 6,\n  \"id_class\": 2,\n  \"nip\": \"198001011998021002\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers"]
+            },
+            "description": "Example: Create an English teacher for Class 2"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Science Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 7,\n  \"id_class\": 1,\n  \"nip\": \"198501011998021003\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers"]
+            },
+            "description": "Example: Create a science teacher for Class 1"
+          },
+          "response": []
+        },
+        {
+          "name": "Search by NIP",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/search?q=1970&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "1970"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Search teachers by NIP starting with '1970'"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class 1 Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/class/1?page=1&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "class", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all teachers assigned to Class 1"
+          },
+          "response": []
+        },
+        {
+          "name": "Search by Teacher Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/teachers/search?q=teacher&limit=15",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "teachers", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "teacher"
+                },
+                {
+                  "key": "limit",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "Example: Search teachers by name containing 'teacher'"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing different teacher scenarios"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 404, 500]);",
+          "});",
+          "",
+          "// Check response format for success responses",
+          "if (pm.response.code < 400) {",
+          "    pm.test('Response has data or message', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.satisfy(function(data) {",
+          "            return data.hasOwnProperty('data') || data.hasOwnProperty('message');",
+          "        });",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ]
+}

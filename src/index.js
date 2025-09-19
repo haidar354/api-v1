@@ -11,6 +11,8 @@ import { attendanceRoute } from '@routes/attendance.route';
 import { academicRoute } from '@routes/academic.route';
 import { roleRoute } from '@routes/role.route';
 import { classesRoute } from '@routes/classes.route';
+import { studentsRoute } from '@routes/students.route';
+import { teachersRoute } from '@routes/teachers.route';
 import { healthCheck } from '@config/database';
 
 /**
@@ -141,6 +143,9 @@ app.route('/api/auth', authRoute);
 app.route('/api/attendance', attendanceRoute);
 app.route('/api/academic', academicRoute);
 app.route('/api/role', roleRoute);
+app.route('/api/classes', classesRoute);
+app.route('/api/students', studentsRoute);
+app.route('/api/teachers', teachersRoute);
 
 /**
  * 404 Handler

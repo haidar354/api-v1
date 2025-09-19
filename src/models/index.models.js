@@ -27,6 +27,14 @@ export {
   classes,
 } from '@models/classes.model.js';
 
+export {
+  teachers,
+} from '@models/teachers.model.js';
+
+export {
+  students,
+} from '@models/students.model.js';
+
 // Export all relations
 export {
   rolesRelations,
@@ -57,6 +65,8 @@ export const schema = {
   surveyResponses,
   departments,
   classes,
+  teachers,
+  students,
   // Relations
   rolesRelations,
   usersRelations,
@@ -74,4 +84,6 @@ import { users, roles, rolePermissions } from '@models/users.model.js';
 import { attendance, guests } from '@models/attendance.model.js';
 import { academicYears, principalAgendas, surveys, surveyResponses } from '@models/academic.model.js';
 import { departments, classes } from '@models/classes.model.js';
+import { teachers } from '@models/teachers.model.js';
+import { students } from '@models/students.model.js';
 import { rolesRelations, usersRelations, rolePermissionsRelations, attendanceRelations, academicYearsRelations, surveysRelations, surveyResponsesRelations, departmentsRelations, classesRelations } from '@models/relations.model.js';

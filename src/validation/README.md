@@ -207,7 +207,7 @@ app.post('/custom-users', validateCustomUser, async (c) => {
 
 // Class schedule
 {
-  classId: 1,
+  id_class: 1,
   subject: "Mathematics",
   teacherId: 5,
   dayOfWeek: "monday",

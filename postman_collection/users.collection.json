@@ -15,6 +15,12 @@
       "key": "apiPrefix",
       "value": "/api",
       "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
     }
   ],
   "item": [

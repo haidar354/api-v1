@@ -1,0 +1,573 @@
+{
+  "info": {
+    "name": "Website Sekolahku - Students API",
+    "description": "Complete API collection for student management endpoints in the school management system. Includes CRUD operations, bulk operations, search, and statistics.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "LOCAL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiPrefix",
+      "value": "/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Students Service Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/health",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "health"]
+            },
+            "description": "Check students service health status with statistics"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints for monitoring students service status"
+    },
+    {
+      "name": "Student Management",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of students per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by NIS or student name",
+                  "disabled": true
+                },
+                {
+                  "key": "class",
+                  "value": "",
+                  "description": "Filter by class ID",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, nis)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc, desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve all students with pagination, filtering, and sorting options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "1"]
+            },
+            "description": "Get a specific student by their ID with user and class information"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 1,\n  \"id_class\": 1,\n  \"nis\": \"2024001\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students"]
+            },
+            "description": "Create a new student. Requires existing user and class IDs, and unique NIS."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_class\": 2,\n  \"nis\": \"2024001\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "1"]
+            },
+            "description": "Update an existing student by ID. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Student (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/1",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "1"]
+            },
+            "description": "Soft delete a student by ID. Student will be marked as deleted but not removed from database."
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/1/restore",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "1", "restore"]
+            },
+            "description": "Restore a soft-deleted student by ID"
+          },
+          "response": []
+        }
+      ],
+      "description": "Basic CRUD operations for student management"
+    },
+    {
+      "name": "Search & Filter",
+      "item": [
+        {
+          "name": "Search Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/search?q=2024&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "2024",
+                  "description": "Search query for NIS or student name (minimum 2 characters)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of results (default 10)"
+                }
+              ]
+            },
+            "description": "Search students by NIS or student name with a query string"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Students by Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/class/1?page=1&limit=10",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "class", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Students per page"
+                }
+              ]
+            },
+            "description": "Get all students in a specific class"
+          },
+          "response": []
+        }
+      ],
+      "description": "Search and filtering endpoints for finding specific students"
+    },
+    {
+      "name": "Bulk Operations",
+      "item": [
+        {
+          "name": "Bulk Create Students",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"students\": [\n    {\n      \"id_user\": 1,\n      \"id_class\": 1,\n      \"nis\": \"2024001\"\n    },\n    {\n      \"id_user\": 2,\n      \"id_class\": 1,\n      \"nis\": \"2024002\"\n    },\n    {\n      \"id_user\": 3,\n      \"id_class\": 2,\n      \"nis\": \"2024003\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/bulk",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "bulk"]
+            },
+            "description": "Create multiple students at once. Maximum 100 students per request. Returns partial success info if some students fail."
+          },
+          "response": []
+        }
+      ],
+      "description": "Bulk operations for creating multiple students efficiently"
+    },
+    {
+      "name": "Statistics & Reports",
+      "item": [
+        {
+          "name": "Students Statistics by Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/stats/classes",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "stats", "classes"]
+            },
+            "description": "Get student count statistics grouped by class"
+          },
+          "response": []
+        }
+      ],
+      "description": "Statistical endpoints for student analytics and reporting"
+    },
+    {
+      "name": "Test Examples",
+      "item": [
+        {
+          "name": "Create Student Example 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 5,\n  \"id_class\": 1,\n  \"nis\": \"2024101\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students"]
+            },
+            "description": "Example: Create a student for Class 1"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Student Example 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_user\": 6,\n  \"id_class\": 2,\n  \"nis\": \"2024201\"\n}"
+            },
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students"]
+            },
+            "description": "Example: Create a student for Class 2"
+          },
+          "response": []
+        },
+        {
+          "name": "Search by NIS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/search?q=2024&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "2024"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Search students by NIS starting with '2024'"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class 1 Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{LOCAL}}{{apiPrefix}}/students/class/1?page=1&limit=20",
+              "host": ["{{LOCAL}}"],
+              "path": ["{{apiPrefix}}", "students", "class", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Example: Get all students in Class 1"
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests for testing different student scenarios"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Basic response validation",
+          "pm.test('Response status code is valid', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 404, 500]);",
+          "});",
+          "",
+          "// Check response format for success responses",
+          "if (pm.response.code < 400) {",
+          "    pm.test('Response has data or message', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.satisfy(function(data) {",
+          "            return data.hasOwnProperty('data') || data.hasOwnProperty('message');",
+          "        });",
+          "    });",
+          "}",
+          "",
+          "// Log response time",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});"
+        ]
+      }
+    }
+  ]
+}

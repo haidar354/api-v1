@@ -9,6 +9,15 @@ export const attendanceSchema = z.object({
     .int('User ID must be an integer')
     .positive('User ID must be positive'),
 
+  id_class: z.number()
+    .int('Class ID must be an integer')
+    .positive('Class ID must be positive')
+    .optional().nullable(),
+
+  id_role: z.number()
+    .int('Role ID must be an integer')
+    .positive('Role ID must be positive'),
+
   date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
 
@@ -17,19 +26,26 @@ export const attendanceSchema = z.object({
     .refine((arr) => new Set(arr).size === arr.length, {
       message: 'Duplicate status values are not allowed',
     }),
+
+  information: z.string()
+    .max(255, 'Information must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional(),
 });
 
 export const createAttendanceSchema = attendanceSchema;
 
 export const updateAttendanceSchema = attendanceSchema.partial().extend({
-  status: z.enum(['hadir', 'izin', 'sakit', 'alpha', 'terlambat'], {
-    errorMap: () => ({ message: 'Status must be one of: hadir, izin, sakit, alpha, terlambat' }),
-  }).optional(),
+  status: z.array(z.enum(['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'cuti', 'dinas']))
+    .optional()
+    .refine((arr) => !arr || new Set(arr).size === arr.length, {
+      message: 'Duplicate status values are not allowed',
+    }),
 });
 
 export const attendanceIdSchema = z.object({
   id: z.string().transform((val) => parseInt(val, 10))
-    .refine((val) => !isNaN(val) && val > 0, 'Invalid attendance ID'),
+    .refine((val) => !isNaN(val) && val > 0, 'Invalid attendance ID WOKKK'),
 });
 
 /**
@@ -48,19 +64,79 @@ export const attendanceQuerySchema = z.object({
   id_user: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
     .refine((val) => val === undefined || (val > 0), 'User ID must be positive'),
 
+  id_role: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Role ID must be positive'),
+
+  id_class: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Class ID must be positive'),
+
   start_date: z.string().optional()
     .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
 
   end_date: z.string().optional()
     .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
 
-  status: z.enum(['hadir', 'izin', 'sakit', 'alpha', 'terlambat']).optional(),
+  status: z.enum(['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'cuti', 'dinas']).optional(),
 
   page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
     .refine((val) => val > 0, 'Page must be positive'),
 
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
     .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+}).refine((data) => {
+  if (data.start_date && data.end_date) {
+    return new Date(data.start_date) <= new Date(data.end_date);
+  }
+  return true;
+}, {
+  message: 'Start date must be before or equal to end date',
+  path: ['end_date'],
+});
+
+/**
+ * Attendance statistics validation schemas
+ */
+export const attendanceStatsSchema = z.object({
+  id_user: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'User ID must be positive'),
+
+  id_role: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Role ID must be positive'),
+
+  id_class: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Class ID must be positive'),
+
+  start_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+
+  end_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+}).refine((data) => {
+  if (data.start_date && data.end_date) {
+    return new Date(data.start_date) <= new Date(data.end_date);
+  }
+  return true;
+}, {
+  message: 'Start date must be before or equal to end date',
+  path: ['end_date'],
+});
+
+/**
+ * Attendance by class validation schemas
+ */
+export const attendanceByClassSchema = z.object({
+  start_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+
+  end_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+
+  id_class: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Class ID must be positive'),
+
+  include_relations: z.string().optional()
+    .transform((val) => val === 'true' || val === '1')
+    .default(false),
 }).refine((data) => {
   if (data.start_date && data.end_date) {
     return new Date(data.start_date) <= new Date(data.end_date);
@@ -94,10 +170,11 @@ export const guestSchema = z.object({
   signature: z.string()
     .min(5, 'Signature must be at least 5 characters')
     .max(255, 'Signature must not exceed 255 characters')
-    .transform((val) => val.trim()),
+    .transform((val) => val.trim())
+    .optional(),
 });
 
-export const createGuestSchema = guestSchema;
+export const createGuestSchema = guestSchema.omit({ signature: true });
 
 export const updateGuestSchema = guestSchema.partial().extend({
   visit_date: z.string()
@@ -161,6 +238,9 @@ export const attendanceReportSchema = z.object({
   id_users: z.array(z.number().int().positive()).optional()
     .refine((ids) => !ids || ids.length <= 100, 'Cannot generate report for more than 100 users'),
 
+  id_roles: z.array(z.number().int().positive()).optional()
+    .refine((ids) => !ids || ids.length <= 50, 'Cannot generate report for more than 50 roles'),
+
   include_weekends: z.boolean().default(false),
 
   format: z.enum(['json', 'csv', 'pdf']).default('json'),
@@ -183,6 +263,7 @@ export const validateCreateAttendance = zValidator('json', createAttendanceSchem
 export const validateUpdateAttendance = zValidator('json', updateAttendanceSchema);
 export const validateAttendanceId = zValidator('param', attendanceIdSchema);
 export const validateAttendanceQuery = zValidator('query', attendanceQuerySchema);
+export const validateAttendanceStats = zValidator('query', attendanceStatsSchema);
 export const validateBulkAttendance = zValidator('json', bulkAttendanceSchema);
 
 export const validateCreateGuest = zValidator('json', createGuestSchema);
@@ -195,3 +276,5 @@ export const validateCreateGuestForm = zValidator('form', guestSchema.omit({ sig
 export const validateUpdateGuestForm = zValidator('form', updateGuestSchema.omit({ signature: true }));
 
 export const validateAttendanceReport = zValidator('json', attendanceReportSchema);
+
+export const validateAttendanceByClass = zValidator('query', attendanceByClassSchema);

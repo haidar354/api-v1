@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import { eq, and, isNull, like, or, desc, asc, ne, sql } from 'drizzle-orm';
 import { db } from '@config/database.js';
 import { users, roles } from '@models/index.models.js';
+import { TeachersService } from '@services/teachers.service.js';
+import { StudentsService } from '@services/students.service.js';
 
 /**
  * Users Service
@@ -26,6 +28,25 @@ export class UsersService {
 
       if (!role_info) {
         throw new Error('Invalid role ID');
+      }
+
+      // Role-specific validation - check role first
+      if (userData.id_role === 3) {
+        // Teacher role - require nip and check for null/undefined
+        if (!userData.data || userData.data.nip === null || userData.data.nip === undefined || userData.data.nip === '') {
+          throw new Error('NIP is required for teachers');
+        }
+        // id_class is optional for teachers
+      }
+
+      if (userData.id_role === 4) {
+        // Student role - require nis and id_class, check for null/undefined
+        if (!userData.data || userData.data.nis === null || userData.data.nis === undefined || userData.data.nis === '') {
+          throw new Error('NIS is required for students');
+        }
+        if (!userData.data || userData.data.id_class === null || userData.data.id_class === undefined) {
+          throw new Error('ID Class is required for students');
+        }
       }
 
       // Prepare user data based on role can_login
@@ -77,15 +98,56 @@ export class UsersService {
         .values(user_to_insert);
 
       // Get the inserted user by ID
-      const insert_id = insert_result[0].insertId;
+      const id_insert = insert_result[0].insertId;
       const [new_user] = await db
         .select()
         .from(users)
-        .where(eq(users.id, insert_id))
+        .where(eq(users.id, id_insert))
         .limit(1);
 
       if (!new_user || Object.keys(new_user).length === 0) {
         throw new Error('Failed to retrieve created user');
+      }
+
+      // Handle role-specific table insertions using services
+      if (userData.id_role === 3) {
+        // Create teacher record using TeachersService
+        const teacher_data = {
+          id_user: new_user.id,
+          id_class: userData.data.id_class || null, // Extract from userData.data, nullable for teachers
+          nip: userData.data.nip
+        };
+
+        try {
+          await TeachersService.createTeacher(teacher_data);
+        } catch (error) {
+          // If teacher creation fails, delete the user to maintain consistency
+          await db
+            .update(users)
+            .set({ deleted_at: new Date() })
+            .where(eq(users.id, new_user.id));
+          throw new Error(`Failed to create teacher record: ${error.message}`);
+        }
+      }
+
+      if (userData.id_role === 4) {
+        // Create student record using StudentsService
+        const student_data = {
+          id_user: new_user.id,
+          id_class: userData.data.id_class, // Extract from userData.data, required for students
+          nis: userData.data.nis
+        };
+
+        try {
+          await StudentsService.createStudent(student_data);
+        } catch (error) {
+          // If student creation fails, delete the user to maintain consistency
+          await db
+            .update(users)
+            .set({ deleted_at: new Date() })
+            .where(eq(users.id, new_user.id));
+          throw new Error(`Failed to create student record: ${error.message}`);
+        }
       }
 
       // Return user without password in data
@@ -296,13 +358,39 @@ export class UsersService {
         throw new Error('User not found');
       }
 
+      const existing_user = existingUserResult.data;
+
+      // Role-specific validation - check role first and validate null/undefined
+      if (existing_user.id_role === 3) {
+        // Teacher role - validate NIP if being updated
+        if (updateData.data && updateData.data.hasOwnProperty('nip')) {
+          if (updateData.data.nip === null || updateData.data.nip === undefined || updateData.data.nip === '') {
+            throw new Error('NIP cannot be null or empty for teachers');
+          }
+        }
+      }
+
+      if (existing_user.id_role === 4) {
+        // Student role - validate NIS if being updated
+        if (updateData.data && updateData.data.hasOwnProperty('nis')) {
+          if (updateData.data.nis === null || updateData.data.nis === undefined || updateData.data.nis === '') {
+            throw new Error('NIS cannot be null or empty for students');
+          }
+        }
+        if (updateData.data && updateData.data.hasOwnProperty('id_class')) {
+          if (updateData.data.id_class === null || updateData.data.id_class === undefined) {
+            throw new Error('ID Class cannot be null or empty for students');
+          }
+        }
+      }
+
       // If email is being updated, check for duplicates
-      if (updateData.email && updateData.email !== existingUserResult.data.email) {
+      if (updateData.data && updateData.data.email && updateData.data.email !== (existing_user.data && existing_user.data.email)) {
         const emailExists = await db
           .select()
           .from(users)
           .where(and(
-            sql`JSON_EXTRACT(data, '$.email') = ${updateData.email}`,
+            sql`JSON_EXTRACT(data, '$.email') = ${updateData.data.email}`,
             isNull(users.deleted_at),
             ne(users.id, userId)
           ))
@@ -328,6 +416,71 @@ export class UsersService {
         .set(updatePayload)
         .where(eq(users.id, userId));
 
+      // Handle role-specific table updates using services validation
+      if (existing_user.id_role === 3 && updateData.data && (updateData.data.nip || updateData.id_class !== undefined)) {
+        // For teachers, we need to find the existing teacher record first
+        const [existing_teacher] = await db
+          .select()
+          .from(teachers)
+          .where(and(
+            eq(teachers.id_user, userId),
+            isNull(teachers.deleted_at)
+          ))
+          .limit(1);
+
+        if (existing_teacher) {
+          const teacher_update_data = {};
+          
+          if (updateData.data.nip) {
+            teacher_update_data.nip = updateData.data.nip;
+          }
+          
+          if (updateData.id_class !== undefined) {
+            teacher_update_data.id_class = updateData.id_class;
+          }
+
+          if (Object.keys(teacher_update_data).length > 0) {
+            try {
+              await TeachersService.updateTeacher(existing_teacher.id, teacher_update_data);
+            } catch (error) {
+              throw new Error(`Failed to update teacher record: ${error.message}`);
+            }
+          }
+        }
+      }
+
+      if (existing_user.id_role === 4 && updateData.data && (updateData.data.nis || updateData.id_class !== undefined)) {
+        // For students, we need to find the existing student record first
+        const [existing_student] = await db
+          .select()
+          .from(students)
+          .where(and(
+            eq(students.id_user, userId),
+            isNull(students.deleted_at)
+          ))
+          .limit(1);
+
+        if (existing_student) {
+          const student_update_data = {};
+          
+          if (updateData.data.nis) {
+            student_update_data.nis = updateData.data.nis;
+          }
+          
+          if (updateData.id_class !== undefined) {
+            student_update_data.id_class = updateData.id_class;
+          }
+
+          if (Object.keys(student_update_data).length > 0) {
+            try {
+              await StudentsService.updateStudent(existing_student.id, student_update_data);
+            } catch (error) {
+              throw new Error(`Failed to update student record: ${error.message}`);
+            }
+          }
+        }
+      }
+
       // Get the updated user
       const [updatedUser] = await db
         .select()
@@ -340,9 +493,14 @@ export class UsersService {
       }
 
       // Return updated user without password
-      const { password: _, ...userWithoutPassword } = updatedUser;
+      const user_response = { ...updatedUser };
+      if (user_response.data && user_response.data.password) {
+        const { password: _, ...data_without_password } = user_response.data;
+        user_response.data = data_without_password;
+      }
+
       return {
-        data: userWithoutPassword,
+        data: user_response,
         status: 200,
         pagination: null
       };

@@ -93,7 +93,7 @@ export class UsersController {
       const response = await UsersService.deleteUser(parseInt(id));
 
       // Return the response directly since it's already a proper Response object
-      return jsonResponse({ message: response.data === false ? "Data berhasil dihapus" : "Data gagal dihapus" }, response.status);
+      return jsonResponse({ message: response.status === 200 ? "Data berhasil dihapus" : "Data gagal dihapus" }, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
     }

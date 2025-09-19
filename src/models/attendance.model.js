@@ -1,5 +1,6 @@
 import { mysqlTable, int, varchar, text, date, datetime, timestamp, customType } from 'drizzle-orm/mysql-core';
-import { users } from './users.model.js';
+import { users, roles } from './users.model.js';
+import { classes } from './classes.model.js';
 
 // Custom SET type for MySQL
 const setType = customType({
@@ -20,9 +21,12 @@ const setType = customType({
  */
 export const attendance = mysqlTable('attendance', {
   id: int('id').primaryKey().autoincrement(),
+  id_role: int('id_role').notNull().references(() => roles.id),
   id_user: int('id_user').notNull().references(() => users.id),
+  id_class: int('id_class').references(() => classes.id),
   date: date('date').notNull(),
   status: setType('status').notNull().default(['alpha']),
+  information: varchar('information', { length: 255 }),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
   deleted_at: timestamp('deleted_at'),

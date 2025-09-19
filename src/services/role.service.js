@@ -39,11 +39,11 @@ export class RoleService {
         .values(role_to_insert);
 
       // Get the inserted role by ID
-      const insert_id = insert_result[0].insertId;
+      const id_insert = insert_result[0].insertId;
       const [new_role] = await db
         .select()
         .from(roles)
-        .where(eq(roles.id, insert_id))
+        .where(eq(roles.id, id_insert))
         .limit(1);
 
       if (!new_role || Object.keys(new_role).length === 0) {
@@ -128,16 +128,16 @@ export class RoleService {
 
   /**
    * Get role by ID
-   * @param {number} role_id - Role ID
+   * @param {number} id_role - Role ID
    * @returns {Promise<Object|null>} Role data
    */
-  static async getRoleById(role_id) {
+  static async getRoleById(id_role) {
     try {
       const [role] = await db
         .select()
         .from(roles)
         .where(and(
-          eq(roles.id, role_id),
+          eq(roles.id, id_role),
           isNull(roles.deleted_at)
         ))
         .limit(1);
@@ -154,14 +154,14 @@ export class RoleService {
 
   /**
    * Update role by ID
-   * @param {number} role_id - Role ID
+   * @param {number} id_role - Role ID
    * @param {Object} update_data - Data to update
    * @returns {Promise<Object|null>} Updated role
    */
-  static async updateRole(role_id, update_data) {
+  static async updateRole(id_role, update_data) {
     try {
       // Check if role exists and not soft deleted
-      const existing_role_result = await this.getRoleById(role_id);
+      const existing_role_result = await this.getRoleById(id_role);
       if (!existing_role_result.data) {
         throw new Error('Role not found');
       }
@@ -174,7 +174,7 @@ export class RoleService {
           .where(and(
             eq(roles.name, update_data.name),
             isNull(roles.deleted_at),
-            ne(roles.id, role_id)
+            ne(roles.id, id_role)
           ))
           .limit(1);
 
@@ -187,13 +187,13 @@ export class RoleService {
       await db
         .update(roles)
         .set(update_data)
-        .where(eq(roles.id, role_id));
+        .where(eq(roles.id, id_role));
 
       // Get the updated role
       const [updated_role] = await db
         .select()
         .from(roles)
-        .where(eq(roles.id, role_id))
+        .where(eq(roles.id, id_role))
         .limit(1);
 
       if (!updated_role) {
@@ -212,13 +212,13 @@ export class RoleService {
 
   /**
    * Soft delete role by ID
-   * @param {number} role_id - Role ID
+   * @param {number} id_role - Role ID
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteRole(role_id) {
+  static async deleteRole(id_role) {
     try {
       // Check if role exists and not already soft deleted
-      const existing_role_result = await this.getRoleById(role_id);
+      const existing_role_result = await this.getRoleById(id_role);
       if (!existing_role_result.data) {
         throw new Error('Role not found');
       }
@@ -228,7 +228,7 @@ export class RoleService {
         .select({ count: sql`count(*)` })
         .from(users)
         .where(and(
-          eq(users.id_role, role_id),
+          eq(users.id_role, id_role),
           isNull(users.deleted_at)
         ));
 
@@ -240,7 +240,7 @@ export class RoleService {
       const update_result = await db
         .update(roles)
         .set({ deleted_at: new Date() })
-        .where(eq(roles.id, role_id));
+        .where(eq(roles.id, id_role));
 
       // Check if the update was successful
       const success = update_result.affectedRows > 0;
@@ -257,16 +257,16 @@ export class RoleService {
 
   /**
    * Restore soft deleted role
-   * @param {number} role_id - Role ID
+   * @param {number} id_role - Role ID
    * @returns {Promise<Object|null>} Restored role
    */
-  static async restoreRole(role_id) {
+  static async restoreRole(id_role) {
     try {
       // Check if role exists and is soft deleted
       const [existing_role] = await db
         .select()
         .from(roles)
-        .where(eq(roles.id, role_id))
+        .where(eq(roles.id, id_role))
         .limit(1);
 
       if (!existing_role) {
@@ -281,13 +281,13 @@ export class RoleService {
       await db
         .update(roles)
         .set({ deleted_at: null })
-        .where(eq(roles.id, role_id));
+        .where(eq(roles.id, id_role));
 
       // Get the restored role
       const [restored_role] = await db
         .select()
         .from(roles)
-        .where(eq(roles.id, role_id))
+        .where(eq(roles.id, id_role))
         .limit(1);
 
       if (!restored_role) {
@@ -349,7 +349,7 @@ export class RoleService {
         .values(permission_to_insert);
 
       // Get the inserted role permission by ID
-      const insert_id = insert_result[0].insertId;
+      const id_insert = insert_result[0].insertId;
       const [new_permission] = await db
         .select({
           id: rolePermissions.id,
@@ -368,7 +368,7 @@ export class RoleService {
         })
         .from(rolePermissions)
         .leftJoin(roles, eq(rolePermissions.id_role, roles.id))
-        .where(eq(rolePermissions.id, insert_id))
+        .where(eq(rolePermissions.id, id_insert))
         .limit(1);
 
       if (!new_permission || Object.keys(new_permission).length === 0) {
@@ -393,15 +393,22 @@ export class RoleService {
    */
   static async getAllRolePermissions(options = {}) {
     try {
-      const {
-        page = 1,
-        limit = 10,
-        search = '',
-        role = '',
-        table_name = '',
-        sortBy = 'created_at',
-        sortOrder = 'desc'
-      } = options;
+      const page = Math.max(1, parseInt(options.page, 10) || 1);
+      const limit = Math.max(1, parseInt(options.limit, 10) || 10);
+      const search = String(options.search || '').trim();
+      const role = options.role ? parseInt(options.role, 10) : null;
+      if (role && isNaN(role)) {
+        throw new Error('Invalid role ID provided');
+      } const table_name = String(options.table_name || '').trim();
+      const sortBy = String(options.sortBy || 'created_at');
+      const sortOrder = String(options.sortOrder || 'desc').toLowerCase();
+
+      console.log("PAGE: ", page)
+      console.log("LIMIT: ", limit)
+      console.log("ROLE: ", role)
+      console.log("TABLE_NAME: ", table_name)
+      console.log("SORT_BY: ", sortBy)
+      console.log("SORT_ORDER: ", sortOrder)
 
       const offset = (page - 1) * limit;
 
@@ -482,10 +489,10 @@ export class RoleService {
 
   /**
    * Get role permission by ID
-   * @param {number} permission_id - Role permission ID
+   * @param {number} id_permission - Role permission ID
    * @returns {Promise<Object|null>} Role permission data
    */
-  static async getRolePermissionById(permission_id) {
+  static async getRolePermissionById(id_permission) {
     try {
       const [permission] = await db
         .select({
@@ -506,7 +513,7 @@ export class RoleService {
         .from(rolePermissions)
         .leftJoin(roles, eq(rolePermissions.id_role, roles.id))
         .where(and(
-          eq(rolePermissions.id, permission_id),
+          eq(rolePermissions.id, id_permission),
           isNull(rolePermissions.deleted_at)
         ))
         .limit(1);
@@ -523,31 +530,31 @@ export class RoleService {
 
   /**
    * Update role permission by ID
-   * @param {number} permission_id - Role permission ID
+   * @param {number} id_permission - Role permission ID
    * @param {Object} update_data - Data to update
    * @returns {Promise<Object|null>} Updated role permission
    */
-  static async updateRolePermission(permission_id, update_data) {
+  static async updateRolePermission(id_permission, update_data) {
     try {
       // Check if role permission exists and not soft deleted
-      const existing_permission_result = await this.getRolePermissionById(permission_id);
+      const existing_permission_result = await this.getRolePermissionById(id_permission);
       if (!existing_permission_result.data) {
         throw new Error('Role permission not found');
       }
 
       // If role or table_name is being updated, check for duplicates
       if ((update_data.id_role || update_data.table_name)) {
-        const final_role_id = update_data.id_role || existing_permission_result.data.id_role;
+        const final_id_role = update_data.id_role || existing_permission_result.data.id_role;
         const final_table_name = update_data.table_name || existing_permission_result.data.table_name;
 
         const duplicate_exists = await db
           .select()
           .from(rolePermissions)
           .where(and(
-            eq(rolePermissions.id_role, final_role_id),
+            eq(rolePermissions.id_role, final_id_role),
             eq(rolePermissions.table_name, final_table_name),
             isNull(rolePermissions.deleted_at),
-            ne(rolePermissions.id, permission_id)
+            ne(rolePermissions.id, id_permission)
           ))
           .limit(1);
 
@@ -560,10 +567,10 @@ export class RoleService {
       await db
         .update(rolePermissions)
         .set(update_data)
-        .where(eq(rolePermissions.id, permission_id));
+        .where(eq(rolePermissions.id, id_permission));
 
       // Get the updated role permission
-      const updated_permission_result = await this.getRolePermissionById(permission_id);
+      const updated_permission_result = await this.getRolePermissionById(id_permission);
 
       if (!updated_permission_result.data) {
         throw new Error('Failed to update role permission');
@@ -581,13 +588,13 @@ export class RoleService {
 
   /**
    * Soft delete role permission by ID
-   * @param {number} permission_id - Role permission ID
+   * @param {number} id_permission - Role permission ID
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteRolePermission(permission_id) {
+  static async deleteRolePermission(id_permission) {
     try {
       // Check if role permission exists and not already soft deleted
-      const existing_permission_result = await this.getRolePermissionById(permission_id);
+      const existing_permission_result = await this.getRolePermissionById(id_permission);
       if (!existing_permission_result.data) {
         throw new Error('Role permission not found');
       }
@@ -596,7 +603,7 @@ export class RoleService {
       const update_result = await db
         .update(rolePermissions)
         .set({ deleted_at: new Date() })
-        .where(eq(rolePermissions.id, permission_id));
+        .where(eq(rolePermissions.id, id_permission));
 
       // Check if the update was successful
       const success = update_result.affectedRows > 0;
@@ -613,16 +620,16 @@ export class RoleService {
 
   /**
    * Restore soft deleted role permission
-   * @param {number} permission_id - Role permission ID
+   * @param {number} id_permission - Role permission ID
    * @returns {Promise<Object|null>} Restored role permission
    */
-  static async restoreRolePermission(permission_id) {
+  static async restoreRolePermission(id_permission) {
     try {
       // Check if role permission exists and is soft deleted
       const [existing_permission] = await db
         .select()
         .from(rolePermissions)
-        .where(eq(rolePermissions.id, permission_id))
+        .where(eq(rolePermissions.id, id_permission))
         .limit(1);
 
       if (!existing_permission) {
@@ -637,10 +644,10 @@ export class RoleService {
       await db
         .update(rolePermissions)
         .set({ deleted_at: null })
-        .where(eq(rolePermissions.id, permission_id));
+        .where(eq(rolePermissions.id, id_permission));
 
       // Get the restored role permission
-      const restored_permission_result = await this.getRolePermissionById(permission_id);
+      const restored_permission_result = await this.getRolePermissionById(id_permission);
 
       if (!restored_permission_result.data) {
         throw new Error('Failed to restore role permission');
@@ -658,13 +665,13 @@ export class RoleService {
 
   /**
    * Get permissions by role ID
-   * @param {number} role_id - Role ID
+   * @param {number} id_role - Role ID
    * @returns {Promise<Object>} Role permissions list
    */
-  static async getPermissionsByRoleId(role_id) {
+  static async getPermissionsByRoleId(id_role) {
     try {
       // Check if role exists
-      const role_result = await this.getRoleById(role_id);
+      const role_result = await this.getRoleById(id_role);
       if (!role_result.data) {
         throw new Error('Role not found');
       }
@@ -682,7 +689,7 @@ export class RoleService {
         })
         .from(rolePermissions)
         .where(and(
-          eq(rolePermissions.id_role, role_id),
+          eq(rolePermissions.id_role, id_role),
           isNull(rolePermissions.deleted_at)
         ))
         .orderBy(asc(rolePermissions.table_name));

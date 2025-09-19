@@ -43,7 +43,7 @@ export class AttendanceController {
       // Fetch attendance record
       const attendance = await attendanceService.getAttendanceById(id);
 
-      return jsonResponse(attendance, 200);
+      return jsonResponse(attendance.data, attendance.status, attendance.pagination);
 
     } catch (error) {
       console.error('Get attendance by ID error:', error);
@@ -67,13 +67,34 @@ export class AttendanceController {
       const filters = c.req.valid('query');
 
       // Fetch attendance records
-      const result = await attendanceService.getAttendances(filters);
+      const result = await attendanceService.getAllAttendances(filters);
 
       return jsonResponse(result.data, result.status);
 
     } catch (error) {
       console.error('Get attendances error:', error);
       return errorResponse(error.message || 'Failed to fetch attendance records', 500);
+    }
+  }
+
+  /**
+   * Get attendance records by class
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response with attendance records by class
+   */
+  static async getAttendanceByClass(c) {
+    try {
+      // Get validated query parameters from middleware
+      const query_params = c.req.valid('query');
+
+      // Get attendance records by class
+      const result = await attendanceService.getAttendanceByClass(query_params);
+
+      return jsonResponse(result.data, result.status, result.pagination);
+
+    } catch (error) {
+      console.error('Get attendance by class error:', error);
+      return errorResponse(error.message || 'Failed to fetch attendance records by class', 500);
     }
   }
 
@@ -127,6 +148,32 @@ export class AttendanceController {
       }
 
       return errorResponse(error.message || 'Failed to delete attendance record', 500);
+    }
+  }
+
+  /**
+   * Restore attendance record
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response with restored attendance
+   */
+  static async restoreAttendance(c) {
+    try {
+      // Get validated ID from middleware
+      const { id } = c.req.valid('param');
+
+      // Restore attendance record
+      const result = await attendanceService.restoreAttendance(parseInt(id));
+
+      return jsonResponse(result.data, result.status);
+
+    } catch (error) {
+      console.error('Restore attendance error:', error);
+
+      if (error.message.includes('not found')) {
+        return errorResponse(error.message, 404);
+      }
+
+      return errorResponse(error.message || 'Failed to restore attendance record', 500);
     }
   }
 
@@ -220,7 +267,7 @@ export class AttendanceController {
       const filters = c.req.valid('query');
 
       // Fetch guest records
-      const result = await attendanceService.getGuests(filters);
+      const result = await attendanceService.getAllGuests(filters);
 
       return jsonResponse(result.data, result.status);
 
@@ -289,6 +336,32 @@ export class AttendanceController {
       }
 
       return errorResponse(error.message || 'Failed to delete guest record', 500);
+    }
+  }
+
+  /**
+   * Restore guest record
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response with restored guest
+   */
+  static async restoreGuest(c) {
+    try {
+      // Get validated ID from middleware
+      const { id } = c.req.valid('param');
+
+      // Restore guest record
+      const result = await attendanceService.restoreGuest(parseInt(id));
+
+      return jsonResponse(result.data, result.status);
+
+    } catch (error) {
+      console.error('Restore guest error:', error);
+
+      if (error.message.includes('not found')) {
+        return errorResponse(error.message, 404);
+      }
+
+      return errorResponse(error.message || 'Failed to restore guest record', 500);
     }
   }
 
