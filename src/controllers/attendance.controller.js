@@ -99,6 +99,27 @@ export class AttendanceController {
   }
 
   /**
+   * Get attendance records by students
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response with attendance records by students
+   */
+  static async getAttendanceByStudents(c) {
+    try {
+      // Get validated query parameters from middleware
+      const query_params = c.req.valid('query');
+
+      // Get attendance records by students
+      const result = await attendanceService.getAttendanceByStudents(query_params);
+
+      return jsonResponse(result.data, result.status, result.pagination);
+
+    } catch (error) {
+      console.error('Get attendance by students error:', error);
+      return errorResponse(error.message || 'Failed to fetch attendance records by students', 500);
+    }
+  }
+
+  /**
    * Update attendance record
    * @param {Object} c - Hono context object
    * @returns {Promise<Response>} JSON response with updated attendance

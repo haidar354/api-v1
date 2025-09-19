@@ -5,6 +5,7 @@ import { eq, and, gte, lte, like, desc, asc, isNull, count, isNotNull, sql } fro
 import uploadService from './upload.service.js';
 import { classes, departments } from '@models/classes.model.js';
 import { academicYears } from '@models/academic.model.js';
+import { students } from '@models/students.model.js';
 
 /**
  * Attendance Service
@@ -888,6 +889,175 @@ class AttendanceService {
     } catch (error) {
       console.error('Get attendance by class error:', error);
       throw new Error(error.message || 'Failed to fetch attendance statistics by class');
+    }
+  }
+
+  /**
+   * Get attendance statistics by students with formatted student information
+   * @param {Object} filters - Date range, class, department, and pagination filters
+   * @returns {Promise<Object>} Students with attendance statistics
+   */
+  static async getAttendanceByStudents(filters = {}) {
+    try {
+      const { 
+        start_date, 
+        end_date, 
+        id_class, 
+        id_department, 
+        id_academic_year,
+        include_relations = false,
+        page = 1,
+        limit = 10
+      } = filters;
+
+      const offset = (page - 1) * limit;
+
+      // Build where conditions for students
+      const student_where_conditions = [isNull(students.deleted_at)];
+
+      if (id_class) {
+        student_where_conditions.push(eq(students.id_class, id_class));
+      }
+
+      if (id_department) {
+        student_where_conditions.push(eq(students.id_departments, id_department));
+      }
+
+      if (id_academic_year) {
+        student_where_conditions.push(eq(classes.id_academic_year, id_academic_year));
+      }
+
+      // Build select fields based on include_relations
+      let select_fields;
+      if (include_relations) {
+        select_fields = {
+          id: students.id,
+          id_class: students.id_class,
+          id_departments: students.id_departments,
+          nis: students.nis,
+          full_name: users.full_name,
+          id_academic_year: classes.id_academic_year,
+          academic_years: {
+            id: academicYears.id,
+            year: academicYears.year,
+          },
+          departments: {
+            id: departments.id,
+            name: departments.name,
+            short_name: departments.short_name,
+          }
+        };
+      } else {
+        select_fields = {
+          id: students.id,
+          id_class: students.id_class,
+          id_departments: students.id_departments,
+          nis: students.nis,
+          full_name: users.full_name,
+          id_academic_year: classes.id_academic_year,
+        };
+      }
+
+      // Get total count for pagination
+      const [total_result] = await db
+        .select({ count: count() })
+        .from(students)
+        .leftJoin(users, eq(students.id_user, users.id))
+        .leftJoin(classes, eq(students.id_class, classes.id))
+        .leftJoin(departments, eq(students.id_departments, departments.id))
+        .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
+        .where(and(...student_where_conditions));
+
+      const total = total_result.count;
+
+      // Get paginated students list with relationships
+      const students_list = await db
+        .select(select_fields)
+        .from(students)
+        .leftJoin(users, eq(students.id_user, users.id))
+        .leftJoin(classes, eq(students.id_class, classes.id))
+        .leftJoin(departments, eq(students.id_departments, departments.id))
+        .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
+        .where(and(...student_where_conditions))
+        .orderBy(desc(students.created_at))
+        .limit(limit)
+        .offset(offset);
+
+      // For each student, get attendance statistics
+      const students_with_stats = await Promise.all(
+        students_list.map(async (student_item) => {
+          // Build where conditions for attendance stats
+          const attendance_where_conditions = [
+            isNull(attendance.deleted_at),
+            eq(attendance.id_user, student_item.id)
+          ];
+
+          if (start_date) {
+            attendance_where_conditions.push(gte(attendance.date, start_date));
+          }
+
+          if (end_date) {
+            attendance_where_conditions.push(lte(attendance.date, end_date));
+          }
+
+          // Get attendance statistics for this student
+          const stats_results = await db
+            .select({
+              status: attendance.status,
+              count: count()
+            })
+            .from(attendance)
+            .where(and(...attendance_where_conditions))
+            .groupBy(attendance.status);
+
+          // Initialize statistics object
+          const statistics = {
+            total: 0,
+            hadir: 0,
+            izin: 0,
+            sakit: 0,
+            alpha: 0,
+            terlambat: 0,
+            cuti: 0,
+            dinas: 0
+          };
+
+          // Process statistics results
+          stats_results.forEach(result => {
+            const status_array = Array.isArray(result.status) ? result.status : [result.status];
+            status_array.forEach(status => {
+              if (statistics.hasOwnProperty(status)) {
+                statistics[status] += result.count;
+                statistics.total += result.count;
+              }
+            });
+          });
+
+          return {
+            ...student_item,
+            statistics,
+            date_range: {
+              start_date,
+              end_date
+            }
+          };
+        })
+      );
+
+      return {
+        data: students_with_stats,
+        status: 200,
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit)
+        }
+      };
+
+    } catch (error) {
+      console.error('Get attendance by students error:', error);
+      throw new Error(error.message || 'Failed to fetch attendance statistics by students');
     }
   }
 }

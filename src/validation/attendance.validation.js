@@ -148,6 +148,44 @@ export const attendanceByClassSchema = z.object({
 });
 
 /**
+ * Attendance by students validation schemas
+ */
+export const attendanceByStudentsSchema = z.object({
+  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
+    .refine((val) => val > 0, 'Page must be positive'),
+
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+
+  id_class: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Class ID must be positive'),
+
+  id_department: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Department ID must be positive'),
+
+  id_academic_year: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Academic Year ID must be positive'),
+
+  start_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+
+  end_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+
+  include_relations: z.string().optional()
+    .transform((val) => val === 'true' || val === '1')
+    .default(false),
+}).refine((data) => {
+  if (data.start_date && data.end_date) {
+    return new Date(data.start_date) <= new Date(data.end_date);
+  }
+  return true;
+}, {
+  message: 'Start date must be before or equal to end date',
+  path: ['end_date'],
+});
+
+/**
  * Guest validation schemas
  */
 export const guestSchema = z.object({
@@ -278,3 +316,4 @@ export const validateUpdateGuestForm = zValidator('form', updateGuestSchema.omit
 export const validateAttendanceReport = zValidator('json', attendanceReportSchema);
 
 export const validateAttendanceByClass = zValidator('query', attendanceByClassSchema);
+export const validateAttendanceByStudents = zValidator('query', attendanceByStudentsSchema);

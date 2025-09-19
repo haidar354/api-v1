@@ -1,5 +1,5 @@
 import { mysqlTable, int, varchar, json, timestamp, boolean } from 'drizzle-orm/mysql-core';
-import { classes } from './classes.model.js';
+import { classes, departments } from './classes.model.js';
 import { users } from './users.model.js';
 
 /**
@@ -10,6 +10,7 @@ export const students = mysqlTable('students', {
   id: int('id').primaryKey().autoincrement(),
   id_user: int('id_user').notNull().references(() => users.id),
   id_class: int('id_class').notNull().references(() => classes.id),
+  id_departments: int('id_departments').notNull().references(() => departments.id),
   nis: varchar('nis', { length: 50 }).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),

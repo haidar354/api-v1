@@ -12,6 +12,7 @@ import {
   validateGuestId,
   validateGuestQuery,
   validateAttendanceByClass,
+  validateAttendanceByStudents,
 } from '@validation/attendance.validation.js';
 
 
@@ -111,6 +112,15 @@ attendanceRoute.get('/',
 attendanceRoute.get('/class',
   validateAttendanceByClass,
   AttendanceController.getAttendanceByClass
+);
+
+/**
+ * GET /attendance/students
+ * Get attendance statistics by students
+ */
+attendanceRoute.get('/students',
+  validateAttendanceByStudents,
+  AttendanceController.getAttendanceByStudents
 );
 
 /**
