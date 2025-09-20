@@ -170,6 +170,10 @@ export const attendanceQuerySchema = z.object({
 
   status: z.enum(['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'cuti', 'dinas']).optional(),
 
+  full_name: z.string().optional()
+    .transform((val) => val?.trim())
+    .refine((val) => !val || val.length >= 2, 'Full name search must be at least 2 characters'),
+
   page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
     .refine((val) => val > 0, 'Page must be positive'),
 

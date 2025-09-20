@@ -186,6 +186,7 @@ class AttendanceService {
         start_date,
         end_date,
         status,
+        full_name,
         page = 1,
         limit = 10
       } = filters;
@@ -215,6 +216,10 @@ class AttendanceService {
 
       if (status) {
         where_conditions.push(like(attendance.status, `%${status}%`));
+      }
+
+      if (full_name) {
+        where_conditions.push(like(users.full_name, `%${full_name}%`));
       }
 
       // Get total count
