@@ -749,6 +749,8 @@ class AttendanceService {
         dinas: 0
       };
 
+      console.log(stats_results);
+
       stats_results.forEach(result => {
         const status_array = Array.isArray(result.status) ? result.status : [result.status];
         status_array.forEach(status => {

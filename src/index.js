@@ -6,7 +6,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import fs from "fs/promises";
 import path from "path";
-
+import imageRoute from "./routes/image.route.js";
 import { usersRoute } from "./routes/users.route.js";
 import { uploadRoute } from "./routes/upload.route.js";
 import { authRoute } from "./routes/auth.route.js";
@@ -99,6 +99,7 @@ const getContentType = (filePath) => {
     png: "image/png",
     gif: "image/gif",
     css: "text/css",
+    webp: "image/webp",
     js: "application/javascript",
     html: "text/html",
     json: "application/json",
@@ -167,6 +168,8 @@ app.route("/api/role", roleRoute);
 app.route("/api/classes", classesRoute);
 app.route("/api/students", studentsRoute);
 app.route("/api/teachers", teachersRoute);
+app.route("/", imageRoute);
+
 
 /**
  * 404 Handler
