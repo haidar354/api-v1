@@ -1,5 +1,5 @@
-import { TeachersService } from '@services/teachers.service.js';
-import { jsonResponse, errorResponse } from '@utils/response.utils.js';
+import { TeachersService } from '../services/teachers.service.js';
+import { jsonResponse, errorResponse } from '../utils/response.utils.js';
 
 /**
  * Teachers Controller

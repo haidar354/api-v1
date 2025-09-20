@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
-import { TeachersController } from '@controllers/teachers.controller.js';
+import { TeachersController } from '../controllers/teachers.controller.js';
 import {
   validateCreateTeacher,
   validateUpdateTeacher,
   validateTeacherId,
   validateTeacherQuery,
   validateBulkCreateTeachers,
-} from '@validation/index.validation.js';
-import { authMiddleware } from "@middlewares/auth.middleware.js";
+} from '../validation/index.validation.js';
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 /**
  * Teachers Routes

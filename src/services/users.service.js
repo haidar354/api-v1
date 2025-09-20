@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { eq, and, isNull, like, or, desc, asc, ne, sql } from 'drizzle-orm';
-import { db } from '@config/database.js';
-import { users, roles } from '@models/index.models.js';
-import { TeachersService } from '@services/teachers.service.js';
-import { StudentsService } from '@services/students.service.js';
+import { db } from '../config/database.js';
+import { users, roles } from '../models/index.models.js';
+import { TeachersService } from '../services/teachers.service.js';
+import { StudentsService } from '../services/students.service.js';
 
 /**
  * Users Service

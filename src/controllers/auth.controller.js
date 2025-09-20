@@ -1,5 +1,5 @@
-import { AuthService } from '@services/auth.service.js';
-import { jsonResponse, errorResponse } from '@utils/response.utils';
+import { AuthService } from '../services/auth.service.js';
+import { jsonResponse, errorResponse } from "../utils/response.utils.js";
 
 /**
  * Authentication Controller

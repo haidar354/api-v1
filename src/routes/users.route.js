@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
-import { UsersController } from '@controllers/users.controller';
+import { UsersController } from "../controllers/users.controller.js";
 import {
   validateCreateUser,
   validateUpdateUser,
   validateUserId,
   validateUserQuery,
   validateBulkCreateUsers,
-} from '@validation/index.validation';
-import { authMiddleware } from "@middlewares/auth.middleware";
+} from "../validation/index.validation.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 /**
  * Users Routes

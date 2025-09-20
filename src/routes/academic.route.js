@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '@middlewares/auth.middleware.js';
-import { AcademicController } from '@controllers/academic.controller.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { AcademicController } from '../controllers/academic.controller.js';
 import {
   validateCreateAcademicYear,
   validateUpdateAcademicYear,
@@ -27,7 +27,7 @@ import {
   validateSurveyResponseId,
   validateSurveyResponseQuery,
   validateBulkSurveyResponse
-} from '@validation/academic.validation.js';
+} from '../validation/academic.validation.js';
 
 const academicRoute = new Hono();
 

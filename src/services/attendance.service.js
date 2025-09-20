@@ -1,11 +1,11 @@
-import { db } from '@config/database.js';
-import { attendance, guests } from '@models/attendance.model.js';
-import { users, roles } from '@models/users.model.js';
+import { db } from '../config/database.js';
+import { attendance, guests } from '../models/attendance.model.js';
+import { users, roles } from '../models/users.model.js';
 import { eq, and, gte, lte, like, desc, asc, isNull, count, isNotNull, sql } from 'drizzle-orm';
 import uploadService from './upload.service.js';
-import { classes, departments } from '@models/classes.model.js';
-import { academicYears } from '@models/academic.model.js';
-import { students } from '@models/students.model.js';
+import { classes, departments } from '../models/classes.model.js';
+import { academicYears } from '../models/academic.model.js';
+import { students } from '../models/students.model.js';
 
 /**
  * Attendance Service
@@ -192,6 +192,9 @@ class AttendanceService {
       // Apply filters
       if (id_user) {
         where_conditions.push(eq(attendance.id_user, id_user));
+      }
+      if (id_class) {
+        where_conditions.push(eq(attendance.id_class, id_class));
       }
 
       if (id_role) {

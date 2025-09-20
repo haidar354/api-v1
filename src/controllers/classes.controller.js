@@ -1,5 +1,5 @@
-import { ClassesService } from '@services/classes.service.js';
-import { jsonResponse, errorResponse } from '@utils/response.utils.js';
+import { ClassesService } from '../services/classes.service.js';
+import { jsonResponse, errorResponse } from '../utils/response.utils.js';
 
 /**
  * Classes Controller

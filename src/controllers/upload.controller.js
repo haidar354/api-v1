@@ -1,5 +1,5 @@
-import uploadService from '@services/upload.service';
-import { fileConstraints } from '@validation/upload.validation';
+import uploadService from '../services/upload.service.js';
+import { fileConstraints } from "../validation/upload.validation.js";
 
 /**
  * Upload Controller

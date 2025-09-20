@@ -1,6 +1,6 @@
 import { eq, and, isNull, like, or, desc, asc, ne, sql, isNotNull } from 'drizzle-orm';
-import { db } from '@config/database.js';
-import { classes, departments, academicYears } from '@models/index.models.js';
+import { db } from '../config/database.js';
+import { classes, departments, academicYears } from '../models/index.models.js';
 
 /**
  * Classes Service

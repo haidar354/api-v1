@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { eq, and, isNull, sql } from 'drizzle-orm';
-import { db } from '@config/database.js';
-import { users, roles } from '@models/index.models.js';
-import { UsersService } from '@services/users.service.js';
+import { db } from '../config/database.js';
+import { users, roles } from '../models/index.models.js';
+import { UsersService } from '../services/users.service.js';
 
 /**
  * Authentication Service

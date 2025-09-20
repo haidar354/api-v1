@@ -8,32 +8,32 @@ export {
   users,
   roles,
   rolePermissions,
-} from '@models/users.model.js';
+} from './users.model.js';
 
 export {
   attendance,
   guests,
-} from '@models/attendance.model.js';
+} from './attendance.model.js';
 
 export {
   academicYears,
   principalAgendas,
   surveys,
   surveyResponses,
-} from '@models/academic.model.js';
+} from './academic.model.js';
 
 export {
   departments,
   classes,
-} from '@models/classes.model.js';
+} from './classes.model.js';
 
 export {
   teachers,
-} from '@models/teachers.model.js';
+} from './teachers.model.js';
 
 export {
   students,
-} from '@models/students.model.js';
+} from './students.model.js';
 
 // Export all relations
 export {
@@ -46,7 +46,7 @@ export {
   surveyResponsesRelations,
   departmentsRelations,
   classesRelations,
-} from '@models/relations.model.js';
+} from './relations.model.js';
 
 /**
  * Schema object for Drizzle database initialization
@@ -80,10 +80,10 @@ export const schema = {
 };
 
 // Re-import tables for easier access
-import { users, roles, rolePermissions } from '@models/users.model.js';
-import { attendance, guests } from '@models/attendance.model.js';
-import { academicYears, principalAgendas, surveys, surveyResponses } from '@models/academic.model.js';
-import { departments, classes } from '@models/classes.model.js';
-import { teachers } from '@models/teachers.model.js';
-import { students } from '@models/students.model.js';
-import { rolesRelations, usersRelations, rolePermissionsRelations, attendanceRelations, academicYearsRelations, surveysRelations, surveyResponsesRelations, departmentsRelations, classesRelations } from '@models/relations.model.js';
+import { users, roles, rolePermissions } from './users.model.js';
+import { attendance, guests } from './attendance.model.js';
+import { academicYears, principalAgendas, surveys, surveyResponses } from './academic.model.js';
+import { departments, classes } from './classes.model.js';
+import { teachers } from './teachers.model.js';
+import { students } from './students.model.js';
+import { rolesRelations, usersRelations, rolePermissionsRelations, attendanceRelations, academicYearsRelations, surveysRelations, surveyResponsesRelations, departmentsRelations, classesRelations } from './relations.model.js';

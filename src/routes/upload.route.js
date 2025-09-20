@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { UploadController } from '@controllers/upload.controller';
-import { authMiddleware } from "@middlewares/auth.middleware";
-import { 
-  validateUploadFile, 
+import { UploadController } from '../controllers/upload.controller.js';
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+import {
+  validateUploadFile,
   validateUploadInfo,
-  validateFileUpload 
-} from '@validation/upload.validation';
+  validateFileUpload,
+} from "../validation/upload.validation.js";
 
 /**
  * Upload Routes

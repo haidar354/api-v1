@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { RoleController } from '@controllers/role.controller';
+import { RoleController } from "../controllers/role.controller.js";
 import {
   validateCreateRole,
   validateUpdateRole,
@@ -9,8 +9,8 @@ import {
   validateUpdateRolePermission,
   validateRolePermissionId,
   validateRolePermissionQuery,
-} from '@validation/index.validation';
-import { authMiddleware } from "@middlewares/auth.middleware";
+} from "../validation/index.validation.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const roleRoute = new Hono();
 

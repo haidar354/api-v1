@@ -1,5 +1,5 @@
-import { StudentsService } from '@services/students.service.js';
-import { jsonResponse, errorResponse } from '@utils/response.utils.js';
+import { StudentsService } from '../services/students.service.js';
+import { jsonResponse, errorResponse } from '../utils/response.utils.js';
 
 /**
  * Students Controller

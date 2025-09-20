@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { AttendanceController } from '@controllers/attendance.controller.js';
-import { authMiddleware } from '@middlewares/auth.middleware.js';
+import { AttendanceController } from '../controllers/attendance.controller.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
 import {
   validateCreateAttendance,
   validateUpdateAttendance,
@@ -13,7 +13,7 @@ import {
   validateGuestQuery,
   validateAttendanceByClass,
   validateAttendanceByStudents,
-} from '@validation/attendance.validation.js';
+} from '../validation/attendance.validation.js';
 
 
 /**

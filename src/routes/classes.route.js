@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { ClassesController } from "@controllers/classes.controller.js";
+import { ClassesController } from "../controllers/classes.controller.js";
 import {
   validateCreateDepartment,
   validateUpdateDepartment,
@@ -12,8 +12,8 @@ import {
   validateClassQuery,
   validateBulkCreateClasses,
   validateClassWithDepartmentsQuery,
-} from '@validation/index.validation.js';
-import { authMiddleware } from "@middlewares/auth.middleware.js";
+} from '../validation/index.validation.js';
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 /**
  * Classes Routes

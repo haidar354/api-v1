@@ -1,6 +1,6 @@
 import { eq, and, isNull, like, or, desc, asc, sql, gte, lte } from 'drizzle-orm';
-import { db } from '@config/database.js';
-import { academicYears, principalAgendas, surveys, surveyQuestions, surveyResponses, surveySurveyors } from '@models/academic.model.js';
+import { db } from '../config/database.js';
+import { academicYears, principalAgendas, surveys, surveyQuestions, surveyResponses, surveySurveyors } from '../models/academic.model.js';
 
 /**
  * Academic Service
