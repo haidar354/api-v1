@@ -44,13 +44,53 @@ export const studentQuerySchema = z.object({
 });
 
 /**
+ * Excel data validation schema
+ * Validates individual Excel row data with case-insensitive key matching
+ */
+export const excelRowSchema = z.object({
+  'Nama Lengkap': z.string().min(1, 'Nama Lengkap is required'),
+  'Kelas': z.string().min(1, 'Kelas is required'),
+  'Jurusan': z.string().min(1, 'Jurusan is required'),
+  'Subkelas': z.union([z.string(), z.number()]).transform((val) => String(val)),
+  'NIS': z.union([z.string(), z.number()]).transform((val) => String(val))
+    .refine((val) => /^[0-9]+$/.test(val), 'NIS can only contain numbers'),
+  'Tahun Ajaran': z.string().min(1, 'Tahun Ajaran is required'),
+}).or(z.object({
+  'nama lengkap': z.string().min(1, 'Nama Lengkap is required'),
+  'kelas': z.string().min(1, 'Kelas is required'),
+  'jurusan': z.string().min(1, 'Jurusan is required'),
+  'subkelas': z.union([z.string(), z.number()]).transform((val) => String(val)),
+  'nis': z.union([z.string(), z.number()]).transform((val) => String(val))
+    .refine((val) => /^[0-9]+$/.test(val), 'NIS can only contain numbers'),
+  'tahun ajaran': z.string().min(1, 'Tahun Ajaran is required'),
+}));
+
+/**
  * Bulk operations schemas
  */
-export const bulkCreateStudentsSchema = z.object({
-  students: z.array(createStudentSchema)
-    .min(1, 'At least one student is required')
-    .max(100, 'Cannot create more than 100 students at once'),
-});
+export const bulkCreateStudentsSchema = z.discriminatedUnion('type', [
+  // Existing format (no type field or type !== 'excel')
+  z.object({
+    type: z.literal('standard').optional(),
+    students: z.array(createStudentSchema)
+      .min(1, 'At least one student is required')
+      .max(100, 'Cannot create more than 100 students at once'),
+  }),
+  // New Excel format
+  z.object({
+    type: z.literal('excel'),
+    data: z.array(excelRowSchema)
+      .min(1, 'At least one student record is required')
+      .max(100, 'Cannot process more than 100 students at once'),
+  }),
+]).or(
+  // Fallback for existing format without type field
+  z.object({
+    students: z.array(createStudentSchema)
+      .min(1, 'At least one student is required')
+      .max(100, 'Cannot create more than 100 students at once'),
+  })
+);
 
 /**
  * Hono validators for easy use in routes

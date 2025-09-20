@@ -1,4 +1,5 @@
 import { StudentsService } from '../services/students.service.js';
+import { UsersService } from '../services/users.service.js';
 import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
@@ -178,28 +179,72 @@ export class StudentsController {
    */
   static async bulkCreateStudents(c) {
     try {
-      const { students: students_data } = c.req.valid('json');
+      const payload = c.req.valid('json');
+      let students_data = [];
+      let processing_errors = [];
+
+      // Handle Excel format
+      if (payload.type === 'excel') {
+        try {
+          const excel_result = await StudentsService.excelData(payload.data);
+          students_data = excel_result.data;
+        } catch (error) {
+          // Handle Excel processing errors with details
+          if (error.details) {
+            return jsonResponse({
+              success: false,
+              message: `Excel processing failed: ${error.message}`,
+              data: {
+                created: [],
+                errors: error.details,
+                summary: {
+                  total: payload.data.length,
+                  successful: 0,
+                  failed: error.details.length
+                }
+              }
+            }, 400);
+          }
+          throw error;
+        }
+      } else {
+        // Handle existing format (with or without type field)
+        students_data = payload.students || [];
+      }
+
+      if (!students_data || students_data.length === 0) {
+        return errorResponse('No student data provided', 400);
+      }
 
       const created_students = [];
       const errors = [];
 
+      // Process each student
       for (let i = 0; i < students_data.length; i++) {
         try {
-          const response = await StudentsService.createStudent(students_data[i]);
+          let response;
+          
+          // For Excel format, use UsersService.createUser
+          if (payload.type === 'excel') {
+            response = await UsersService.createUser(students_data[i]);
+          } else {
+            // For existing format, use StudentsService.createStudent
+            response = await StudentsService.createStudent(students_data[i]);
+          }
 
           if (response.status >= 200 && response.status < 300) {
             created_students.push(response.data);
           } else {
             errors.push({
               index: i,
-              nis: students_data[i].nis,
+              nis: students_data[i].data?.nis || students_data[i].nis,
               error: 'Failed to create student'
             });
           }
         } catch (error) {
           errors.push({
             index: i,
-            nis: students_data[i].nis,
+            nis: students_data[i].data?.nis || students_data[i].nis,
             error: error.message
           });
         }

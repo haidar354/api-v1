@@ -132,7 +132,7 @@ export class UsersController {
   }
 
   /**
-   * Search users by email or name
+   * Search users by  name
    * GET /users/search
    */
   static async searchUsers(c) {
@@ -205,14 +205,12 @@ export class UsersController {
             const errorData = response.data;
             errors.push({
               index: i,
-              email: usersData[i].email,
               error: errorData.error
             });
           }
         } catch (error) {
           errors.push({
             index: i,
-            email: usersData[i].email,
             error: error.message
           });
         }

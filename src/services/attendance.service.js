@@ -923,7 +923,7 @@ class AttendanceService {
       }
 
       if (id_department) {
-        student_where_conditions.push(eq(students.id_departments, id_department));
+        student_where_conditions.push(eq(students.id_department, id_department));
       }
 
       if (id_academic_year) {
@@ -936,7 +936,7 @@ class AttendanceService {
         select_fields = {
           id: students.id,
           id_class: students.id_class,
-          id_departments: students.id_departments,
+          id_department: students.id_department,
           nis: students.nis,
           full_name: users.full_name,
           id_academic_year: classes.id_academic_year,
@@ -954,7 +954,7 @@ class AttendanceService {
         select_fields = {
           id: students.id,
           id_class: students.id_class,
-          id_departments: students.id_departments,
+          id_department: students.id_department,
           nis: students.nis,
           full_name: users.full_name,
           id_academic_year: classes.id_academic_year,
@@ -967,7 +967,7 @@ class AttendanceService {
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
-        .leftJoin(departments, eq(students.id_departments, departments.id))
+        .leftJoin(departments, eq(students.id_department, departments.id))
         .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
         .where(and(...student_where_conditions));
 
@@ -979,7 +979,7 @@ class AttendanceService {
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
-        .leftJoin(departments, eq(students.id_departments, departments.id))
+        .leftJoin(departments, eq(students.id_department, departments.id))
         .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
         .where(and(...student_where_conditions))
         .orderBy(desc(students.created_at))
