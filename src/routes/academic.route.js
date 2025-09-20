@@ -26,7 +26,12 @@ import {
   validateUpdateSurveyResponse,
   validateSurveyResponseId,
   validateSurveyResponseQuery,
-  validateBulkSurveyResponse
+  validateBulkSurveyResponse,
+  validateLetterQuery,
+  validateLetterId,
+  validateCreateLetter,
+  validateBulkLetter,
+  validateUpdateLetter
 } from '../validation/academic.validation.js';
 
 const academicRoute = new Hono();
@@ -161,5 +166,28 @@ academicRoute.delete('/responses/:id', authMiddleware, validateSurveyResponseId,
 
 // POST /academic/responses/:id/restore - Restore soft deleted survey response
 academicRoute.post('/responses/:id/restore', authMiddleware, validateSurveyResponseId, AcademicController.restoreSurveyResponse);
+
+// ============= LETTERS ROUTES =============
+
+// GET /academic/letters - Get all letters with pagination and filtering
+academicRoute.get('/letters', authMiddleware, validateLetterQuery, AcademicController.getAllLetters);
+
+// GET /academic/letters/:id - Get letter by ID
+academicRoute.get('/letters/:id', authMiddleware, validateLetterId, AcademicController.getLetterById);
+
+// POST /academic/letters - Create new letter
+academicRoute.post('/letters', authMiddleware, validateCreateLetter, AcademicController.createLetter);
+
+// POST /academic/letters/bulk - Create multiple letters
+academicRoute.post('/letters/bulk', authMiddleware, validateBulkLetter, AcademicController.createBulkLetters);
+
+// PUT /academic/letters/:id - Update letter by ID
+academicRoute.put('/letters/:id', authMiddleware, validateLetterId, validateUpdateLetter, AcademicController.updateLetter);
+
+// DELETE /academic/letters/:id - Soft delete letter by ID
+academicRoute.delete('/letters/:id', authMiddleware, validateLetterId, AcademicController.deleteLetter);
+
+// POST /academic/letters/:id/restore - Restore soft deleted letter
+academicRoute.post('/letters/:id/restore', authMiddleware, validateLetterId, AcademicController.restoreLetter);
 
 export { academicRoute };

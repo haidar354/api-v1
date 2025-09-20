@@ -17,6 +17,16 @@ export const attendanceSchema = z.object({
   id_role: z.number()
     .int('Role ID must be an integer')
     .positive('Role ID must be positive'),
+    
+  time: z.string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Time must be in HH:MM or HH:MM:SS format')
+    .transform((val) => {
+      // Convert HH:MM to HH:MM:SS format if needed
+      if (val && val.length === 5) {
+        return `${val}:00`;
+      }
+      return val;
+    }),
 
   date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
@@ -30,7 +40,7 @@ export const attendanceSchema = z.object({
   information: z.string()
     .max(255, 'Information must not exceed 255 characters')
     .transform((val) => val?.trim())
-    .optional(),
+    .optional().nullable(),
 });
 
 export const createAttendanceSchema = attendanceSchema;
@@ -51,11 +61,93 @@ export const attendanceIdSchema = z.object({
 /**
  * Bulk attendance validation schemas
  */
-export const bulkAttendanceSchema = z.object({
-  attendances: z.array(attendanceSchema)
-    .min(1, 'At least one attendance record is required')
-    .max(500, 'Cannot process more than 500 attendance records at once'),
-});
+export const attendanceExcelRowSchema = z.object({
+  'Nama Lengkap': z.string()
+    .min(1, 'Nama Lengkap is required')
+    .transform((val) => val?.trim()),
+  'nama lengkap': z.string()
+    .min(1, 'nama lengkap is required')
+    .transform((val) => val?.trim())
+    .optional(),
+
+  'Hadir': z.string().optional().nullable(),
+  'hadir': z.string().optional().nullable(),
+
+  'Izin': z.string().optional().nullable(),
+  'izin': z.string().optional().nullable(),
+
+  'Sakit': z.string().optional().nullable(),
+  'sakit': z.string().optional().nullable(),
+
+  'Alpha': z.string().optional().nullable(),
+  'alpha': z.string().optional().nullable(),
+
+  'Terlambat': z.string().optional().nullable(),
+  'terlambat': z.string().optional().nullable(),
+
+  'Cuti': z.string().optional().nullable(),
+  'cuti': z.string().optional().nullable(),
+
+  'Dinas': z.string().optional().nullable(),
+  'dinas': z.string().optional().nullable(),
+
+  'Tanggal': z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal must be in YYYY-MM-DD format'),
+  'tanggal': z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'tanggal must be in YYYY-MM-DD format')
+    .optional(),
+
+  'Waktu': z.string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Waktu must be in HH:MM or HH:MM:SS format')
+    .transform((val) => {
+      if (val && val.length === 5) {
+        return `${val}:00`;
+      }
+      return val;
+    })
+    .optional(),
+  'waktu': z.string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'waktu must be in HH:MM or HH:MM:SS format')
+    .transform((val) => {
+      if (val && val.length === 5) {
+        return `${val}:00`;
+      }
+      return val;
+    })
+    .optional(),
+
+  'Informasi': z.string()
+    .max(255, 'Informasi must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional().nullable(),
+  'informasi': z.string()
+    .max(255, 'informasi must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional().nullable(),
+}).passthrough(); // Allow additional properties
+
+export const bulkAttendanceSchema = z.union([
+  // Excel format
+  z.object({
+    type: z.literal('excel'),
+    data: z.array(attendanceExcelRowSchema)
+      .min(1, 'At least one attendance record is required')
+      .max(500, 'Cannot process more than 500 attendance records at once'),
+  }),
+  // Standard format with type field
+  z.object({
+    type: z.literal('standard'),
+    attendances: z.array(attendanceSchema)
+      .min(1, 'At least one attendance record is required')
+      .max(500, 'Cannot process more than 500 attendance records at once'),
+  }),
+  // Legacy format without type field
+  z.object({
+    attendances: z.array(attendanceSchema)
+      .min(1, 'At least one attendance record is required')
+      .max(500, 'Cannot process more than 500 attendance records at once'),
+  }),
+]);
 
 /**
  * Attendance query validation schemas

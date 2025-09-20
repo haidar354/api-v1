@@ -205,11 +205,45 @@ export class AttendanceController {
    */
   static async createBulkAttendance(c) {
     try {
-      // Get validated data from middleware
-      const { attendances } = c.req.valid('json');
+      const payload = c.req.valid('json');
+      let attendances_data = [];
+      let processing_errors = [];
 
-      // Create bulk attendance records
-      const result = await attendanceService.createBulkAttendance(attendances);
+      // Handle Excel format
+      if (payload.type === 'excel') {
+        try {
+          const excel_result = await attendanceService.excelData(payload.data);
+          attendances_data = excel_result.data;
+        } catch (error) {
+          // Handle Excel processing errors with details
+          if (error.details) {
+            return jsonResponse({
+              success: false,
+              message: `Excel processing failed: ${error.message}`,
+              data: {
+                created: [],
+                errors: error.details,
+                summary: {
+                  total: payload.data.length,
+                  successful: 0,
+                  failed: error.details.length
+                }
+              }
+            }, 400);
+          }
+          throw error;
+        }
+      } else {
+        // Handle existing format (with or without type field)
+        attendances_data = payload.attendances || [];
+      }
+
+      if (!attendances_data || attendances_data.length === 0) {
+        return errorResponse('No attendance data provided', 400);
+      }
+
+      // Create bulk attendance records using existing service method
+      const result = await attendanceService.createBulkAttendance(attendances_data);
 
       return jsonResponse(result.data, result.status);
 

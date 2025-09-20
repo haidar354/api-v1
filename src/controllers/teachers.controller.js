@@ -1,4 +1,5 @@
 import { TeachersService } from '../services/teachers.service.js';
+import { UsersService } from '../services/users.service.js';
 import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
@@ -178,28 +179,72 @@ export class TeachersController {
    */
   static async bulkCreateTeachers(c) {
     try {
-      const { teachers: teachers_data } = c.req.valid('json');
+      const payload = c.req.valid('json');
+      let teachers_data = [];
+      let processing_errors = [];
+
+      // Handle Excel format
+      if (payload.type === 'excel') {
+        try {
+          const excel_result = await TeachersService.excelData(payload.data);
+          teachers_data = excel_result.data;
+        } catch (error) {
+          // Handle Excel processing errors with details
+          if (error.details) {
+            return jsonResponse({
+              success: false,
+              message: `Excel processing failed: ${error.message}`,
+              data: {
+                created: [],
+                errors: error.details,
+                summary: {
+                  total: payload.data.length,
+                  successful: 0,
+                  failed: error.details.length
+                }
+              }
+            }, 400);
+          }
+          throw error;
+        }
+      } else {
+        // Handle existing format (with or without type field)
+        teachers_data = payload.teachers || [];
+      }
+
+      if (!teachers_data || teachers_data.length === 0) {
+        return errorResponse('No teacher data provided', 400);
+      }
 
       const created_teachers = [];
       const errors = [];
 
+      // Process each teacher
       for (let i = 0; i < teachers_data.length; i++) {
         try {
-          const response = await TeachersService.createTeacher(teachers_data[i]);
+          let response;
+          
+          // For Excel format, use UsersService.createUser
+          if (payload.type === 'excel') {
+            response = await UsersService.createUser(teachers_data[i]);
+          } else {
+            // For existing format, use TeachersService.createTeacher
+            response = await TeachersService.createTeacher(teachers_data[i]);
+          }
 
           if (response.status >= 200 && response.status < 300) {
             created_teachers.push(response.data);
           } else {
             errors.push({
               index: i,
-              nip: teachers_data[i].nip,
+              nip: teachers_data[i].data?.nip || teachers_data[i].nip,
               error: 'Failed to create teacher'
             });
           }
         } catch (error) {
           errors.push({
             index: i,
-            nip: teachers_data[i].nip,
+            nip: teachers_data[i].data?.nip || teachers_data[i].nip,
             error: error.message
           });
         }

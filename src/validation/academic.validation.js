@@ -354,6 +354,114 @@ export const surveyAnalyticsSchema = z.object({
 });
 
 /**
+ * Letters validation schemas
+ */
+export const letterSchema = z.object({
+  id_user: z.number()
+    .int('User ID must be an integer')
+    .positive('User ID must be positive'),
+
+  letter_number: z.string()
+    .min(1, 'Letter number is required')
+    .max(100, 'Letter number must not exceed 100 characters')
+    .transform((val) => val.trim()),
+
+  letter_type: z.enum(['incoming', 'outgoing'], {
+    errorMap: () => ({ message: 'Letter type must be either "incoming" or "outgoing"' })
+  }),
+
+  title: z.string()
+    .min(3, 'Letter title must be at least 3 characters')
+    .max(255, 'Letter title must not exceed 255 characters')
+    .transform((val) => val.trim()),
+
+  description: z.string()
+    .max(2000, 'Description must not exceed 2000 characters')
+    .transform((val) => val?.trim())
+    .optional(),
+
+  sender: z.string()
+    .max(255, 'Sender must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional(),
+
+  recipient: z.string()
+    .max(255, 'Recipient must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional(),
+
+  date_received: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date received must be in YYYY-MM-DD format')
+    .refine((date) => {
+      const parsed_date = new Date(date);
+      return !isNaN(parsed_date.getTime());
+    }, 'Date received must be a valid date')
+    .optional(),
+
+  date_sent: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date sent must be in YYYY-MM-DD format')
+    .refine((date) => {
+      const parsed_date = new Date(date);
+      return !isNaN(parsed_date.getTime());
+    }, 'Date sent must be a valid date')
+    .optional(),
+
+  file_path: z.string()
+    .max(255, 'File path must not exceed 255 characters')
+    .transform((val) => val?.trim())
+    .optional(),
+});
+
+export const createLetterSchema = letterSchema;
+
+export const updateLetterSchema = letterSchema.partial();
+
+export const letterIdSchema = z.object({
+  id: z.string().transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val > 0, 'Invalid letter ID'),
+});
+
+export const letterQuerySchema = z.object({
+  id_user: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || val > 0, 'User ID must be positive'),
+
+  letter_type: z.enum(['incoming', 'outgoing']).optional(),
+
+  search: z.string().optional()
+    .transform((val) => val?.trim())
+    .refine((val) => !val || val.length >= 2, 'Search term must be at least 2 characters'),
+
+  start_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+
+  end_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+
+  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
+    .refine((val) => val > 0, 'Page must be positive'),
+
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+}).refine((data) => {
+  if (data.start_date && data.end_date) {
+    return new Date(data.start_date) <= new Date(data.end_date);
+  }
+  return true;
+}, {
+  message: 'Start date must be before or equal to end date',
+  path: ['end_date'],
+});
+
+/**
+ * Bulk letters validation schemas
+ */
+export const bulkLetterSchema = z.object({
+  letters: z.array(letterSchema)
+    .min(1, 'At least one letter is required')
+    .max(100, 'Cannot process more than 100 letters at once'),
+});
+
+/**
  * Hono validators for easy use in routes
  */
 export const validateCreateAcademicYear = zValidator('json', createAcademicYearSchema);
@@ -388,3 +496,9 @@ export const validateSurveySurveyorId = zValidator('param', surveySurveyorIdSche
 export const validateSurveySurveyorQuery = zValidator('query', surveySurveyorQuerySchema);
 
 export const validateSurveyAnalytics = zValidator('json', surveyAnalyticsSchema);
+
+export const validateCreateLetter = zValidator('json', createLetterSchema);
+export const validateUpdateLetter = zValidator('json', updateLetterSchema);
+export const validateLetterId = zValidator('param', letterIdSchema);
+export const validateLetterQuery = zValidator('query', letterQuerySchema);
+export const validateBulkLetter = zValidator('json', bulkLetterSchema);

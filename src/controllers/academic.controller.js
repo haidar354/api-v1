@@ -640,6 +640,125 @@ export class AcademicController {
     }
   }
 
+  // ============= LETTERS CONTROLLERS =============
+
+  /**
+   * Create a new letter
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async createLetter(c) {
+    try {
+      const letter_data = c.req.valid('json');
+      const response = await AcademicService.createLetter(letter_data);
+      
+      return jsonResponse(response.data, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 400);
+    }
+  }
+
+  /**
+   * Create multiple letters at once
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async createBulkLetters(c) {
+    try {
+      const { letters } = c.req.valid('json');
+      const response = await AcademicService.createBulkLetters(letters);
+      
+      return jsonResponse(response.data, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 400);
+    }
+  }
+
+  /**
+   * Get all letters with pagination and filtering
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async getAllLetters(c) {
+    try {
+      const query_params = c.req.valid('query');
+      const response = await AcademicService.getAllLetters(query_params);
+      
+      return jsonResponse(response.data, response.status, response.pagination);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
+  /**
+   * Get letter by ID
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async getLetterById(c) {
+    try {
+      const { id } = c.req.valid('param');
+      const response = await AcademicService.getLetterById(parseInt(id));
+      
+      if (!response.data) {
+        return errorResponse('Letter not found', 404);
+      }
+      
+      return jsonResponse(response.data, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
+  /**
+   * Update letter by ID
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async updateLetter(c) {
+    try {
+      const { id } = c.req.valid('param');
+      const update_data = c.req.valid('json');
+      const response = await AcademicService.updateLetter(parseInt(id), update_data);
+      
+      return jsonResponse(response.data, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 400);
+    }
+  }
+
+  /**
+   * Soft delete letter by ID
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async deleteLetter(c) {
+    try {
+      const { id } = c.req.valid('param');
+      const response = await AcademicService.deleteLetter(parseInt(id));
+      
+      return jsonResponse({ message: response.status === 200 ? "Letter deleted successfully" : "Failed to delete letter" }, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 400);
+    }
+  }
+
+  /**
+   * Restore soft deleted letter
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response
+   */
+  static async restoreLetter(c) {
+    try {
+      const { id } = c.req.valid('param');
+      const response = await AcademicService.restoreLetter(parseInt(id));
+      
+      return jsonResponse(response.data, response.status);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
   // ============= HEALTH CHECK CONTROLLER =============
 
   /**

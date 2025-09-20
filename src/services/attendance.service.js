@@ -63,8 +63,8 @@ class AttendanceService {
    */
   static async createAttendance(attendance_data) {
     try {
-      const { id_user, id_role, date, status, information } = attendance_data;
-
+      const { id_user, id_class, id_role, date, time, status, information } = attendance_data;
+      
       // Verify user exists
       const existing_user = await db
         .select()
@@ -95,7 +95,9 @@ class AttendanceService {
         .values({
           id_user,
           id_role: id_role || existing_user[0].id_role,
+          id_class: id_class || existing_user[0].data.id_class,
           date,
+          time,
           status: Array.isArray(status) ? status : [status],
           information: information || null
         });
@@ -130,6 +132,7 @@ class AttendanceService {
           id_role: attendance.id_role,
           id_class: attendance.id_class,
           date: attendance.date,
+          time: attendance.time,
           status: attendance.status,
           information: attendance.information,
           created_at: attendance.created_at,
@@ -231,7 +234,9 @@ class AttendanceService {
           id_role: attendance.id_role,
           id_class: attendance.id_class,
           date: attendance.date,
+          time: attendance.time,
           status: attendance.status,
+          information: attendance.information,
           created_at: attendance.created_at,
           updated_at: attendance.updated_at,
           user: {
@@ -697,6 +702,135 @@ class AttendanceService {
     }
   }
 
+  // ==================== EXCEL DATA PROCESSING ====================
+
+  /**
+   * Process Excel data format and convert to bulk attendance format
+   * @param {Array} excelData - Array of Excel row objects
+   * @returns {Promise<Object>} Processed attendance data array
+   */
+  static async excelData(excelData) {
+    try {
+      const processed_data = [];
+      const errors = [];
+
+      for (let i = 0; i < excelData.length; i++) {
+        try {
+          const row = excelData[i];
+
+          // Normalize keys to handle case-insensitive matching
+          const normalized_row = {};
+          Object.keys(row).forEach(key => {
+            const normalized_key = key.toLowerCase().trim();
+            normalized_row[normalized_key] = row[key];
+          });
+
+          // Extract data with case-insensitive key matching
+          const full_name = normalized_row['nama lengkap'] || row['Nama Lengkap'];
+          const date = normalized_row['tanggal'] || row['Tanggal'];
+          const time = normalized_row['waktu'] || row['Waktu'];
+          const information = normalized_row['informasi'] || row['Informasi'] || null;
+
+          // Validate required fields
+          if (!full_name || !date || !time) {
+            errors.push({
+              index: i,
+              error: 'Missing required fields: Nama Lengkap, Tanggal, Waktu'
+            });
+            continue;
+          }
+
+          // Format time if needed (convert HH:MM to HH:MM:SS)
+          let formatted_time = time;
+          if (time && time.length === 5) {
+            formatted_time = `${time}:00`;
+          }
+
+          // Find user by full_name
+          const [user_record] = await db
+            .select({ id: users.id, data: users.data })
+            .from(users)
+            .where(and(
+              eq(users.full_name, full_name),
+              isNull(users.deleted_at)
+            ))
+            .limit(1);
+
+          if (!user_record) {
+            errors.push({
+              index: i,
+              full_name: full_name,
+              error: `User with name '${full_name}' not found`
+            });
+            continue;
+          }
+
+          // Process status fields
+          const status_fields = ['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'cuti', 'dinas'];
+          const status_array = [];
+
+          for (const status_field of status_fields) {
+            // Check both proper case and lowercase versions
+            const proper_case_key = status_field.charAt(0).toUpperCase() + status_field.slice(1);
+            const value = normalized_row[status_field] || row[proper_case_key];
+
+            if (value && typeof value === 'string' && value.toLowerCase().trim() === 'ya') {
+              status_array.push(status_field);
+            }
+          }
+
+          // If no status found, default to 'alpha'
+          if (status_array.length === 0) {
+            status_array.push('alpha');
+          }
+
+          // Create processed attendance object
+          const processed_attendance = {
+            id_user: user_record.id,
+            id_class: user_record.data.id_class || null,
+            date: date,
+            time: formatted_time,
+            status: status_array
+          };
+
+          // Add information if provided
+          if (information && information.trim() !== '') {
+            processed_attendance.information = information.trim();
+          }
+
+          processed_data.push(processed_attendance);
+
+        } catch (error) {
+          errors.push({
+            index: i,
+            error: `Processing error: ${error.message}`
+          });
+        }
+      }
+
+      // If there are errors, throw with details
+      if (errors.length > 0) {
+        const error_message = `Failed to process ${errors.length} out of ${excelData.length} records`;
+        const error = new Error(error_message);
+        error.details = errors;
+        throw error;
+      }
+
+      return {
+        data: processed_data,
+        status: 200,
+        pagination: null
+      };
+
+    } catch (error) {
+      if (error.details) {
+        // Re-throw errors with details
+        throw error;
+      }
+      throw new Error(`Failed to process Excel data: ${error.message}`);
+    }
+  }
+
   // ==================== UTILITY METHODS ====================
 
   /**
@@ -902,11 +1036,11 @@ class AttendanceService {
    */
   static async getAttendanceByStudents(filters = {}) {
     try {
-      const { 
-        start_date, 
-        end_date, 
-        id_class, 
-        id_department, 
+      const {
+        start_date,
+        end_date,
+        id_class,
+        id_department,
         id_academic_year,
         include_relations = false,
         page = 1,

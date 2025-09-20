@@ -44,13 +44,54 @@ export const teacherQuerySchema = z.object({
 });
 
 /**
+ * Excel data validation schema for teachers
+ * Validates individual Excel row data with case-insensitive key matching
+ * Class-related fields (Kelas, Jurusan, Subkelas, Tahun Ajaran) can be null
+ */
+export const teacherExcelRowSchema = z.object({
+  'Nama Lengkap': z.string().min(1, 'Nama Lengkap is required'),
+  'Kelas': z.union([z.string(), z.null()]).optional(),
+  'Jurusan': z.union([z.string(), z.null()]).optional(),
+  'Subkelas': z.union([z.string(), z.number(), z.null()]).optional().transform((val) => val !== null && val !== undefined ? String(val) : null),
+  'NIP': z.union([z.string(), z.number()]).transform((val) => String(val))
+    .refine((val) => /^[0-9]+$/.test(val), 'NIP can only contain numbers'),
+  'Tahun Ajaran': z.union([z.string(), z.null()]).optional(),
+}).or(z.object({
+  'nama lengkap': z.string().min(1, 'Nama Lengkap is required'),
+  'kelas': z.union([z.string(), z.null()]).optional(),
+  'jurusan': z.union([z.string(), z.null()]).optional(),
+  'subkelas': z.union([z.string(), z.number(), z.null()]).optional().transform((val) => val !== null && val !== undefined ? String(val) : null),
+  'nip': z.union([z.string(), z.number()]).transform((val) => String(val))
+    .refine((val) => /^[0-9]+$/.test(val), 'NIP can only contain numbers'),
+  'tahun ajaran': z.union([z.string(), z.null()]).optional(),
+}));
+
+/**
  * Bulk operations schemas
  */
-export const bulkCreateTeachersSchema = z.object({
-  teachers: z.array(createTeacherSchema)
-    .min(1, 'At least one teacher is required')
-    .max(100, 'Cannot create more than 100 teachers at once'),
-});
+export const bulkCreateTeachersSchema = z.discriminatedUnion('type', [
+  // Existing format (no type field or type !== 'excel')
+  z.object({
+    type: z.literal('standard').optional(),
+    teachers: z.array(createTeacherSchema)
+      .min(1, 'At least one teacher is required')
+      .max(100, 'Cannot create more than 100 teachers at once'),
+  }),
+  // New Excel format
+  z.object({
+    type: z.literal('excel'),
+    data: z.array(teacherExcelRowSchema)
+      .min(1, 'At least one teacher record is required')
+      .max(100, 'Cannot process more than 100 teachers at once'),
+  }),
+]).or(
+  // Fallback for existing format without type field
+  z.object({
+    teachers: z.array(createTeacherSchema)
+      .min(1, 'At least one teacher is required')
+      .max(100, 'Cannot create more than 100 teachers at once'),
+  })
+);
 
 /**
  * Hono validators for easy use in routes

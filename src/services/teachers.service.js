@@ -1,6 +1,6 @@
 import { eq, and, isNull, like, or, desc, asc, ne, sql } from 'drizzle-orm';
 import { db } from '../config/database.js';
-import { teachers, users, classes } from '../models/index.models.js';
+import { teachers, users, classes, departments, academicYears } from '../models/index.models.js';
 
 /**
  * Teachers Service
@@ -26,20 +26,6 @@ export class TeachersService {
 
       if (!existing_user) {
         throw new Error('User not found');
-      }
-
-      // Check if class exists and not soft deleted
-      const [existing_class] = await db
-        .select()
-        .from(classes)
-        .where(and(
-          eq(classes.id, teacherData.id_class),
-          isNull(classes.deleted_at)
-        ))
-        .limit(1);
-
-      if (!existing_class) {
-        throw new Error('Class not found');
       }
 
       // Check if NIP already exists (excluding soft deleted)
@@ -494,6 +480,168 @@ export class TeachersService {
       };
     } catch (error) {
       throw new Error(`Teachers service health check failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Process Excel data format and convert to user creation format for teachers
+   * @param {Array} excelData - Array of Excel row objects
+   * @returns {Promise<Array>} Processed user data array
+   */
+  static async excelData(excelData) {
+    try {
+      const processed_data = [];
+      const errors = [];
+
+      for (let i = 0; i < excelData.length; i++) {
+        try {
+          const row = excelData[i];
+          
+          // Normalize keys to handle case-insensitive matching
+          const normalized_row = {};
+          Object.keys(row).forEach(key => {
+            const normalized_key = key.toLowerCase().trim();
+            normalized_row[normalized_key] = row[key];
+          });
+
+          // Extract data with case-insensitive key matching
+          const full_name = normalized_row['nama lengkap'] || row['Nama Lengkap'];
+          const grade = normalized_row['kelas'] || row['Kelas'];
+          const department_name = normalized_row['jurusan'] || row['Jurusan'];
+          const subgrade = normalized_row['subkelas'] || row['Subkelas'];
+          const nip = String(normalized_row['nip'] || row['NIP']);
+          const academic_year = normalized_row['tahun ajaran'] || row['Tahun Ajaran'];
+
+          // Validate required fields (only full_name and nip are required)
+          if (!full_name || !nip) {
+            errors.push({
+              index: i,
+              error: 'Missing required fields: Nama Lengkap, NIP'
+            });
+            continue;
+          }
+
+          let id_class = null;
+
+          // If any class-related field is provided, try to resolve the class
+          if (grade && department_name && subgrade && academic_year) {
+            // Check if all required class fields are provided
+            if (!grade || !department_name || !academic_year) {
+              // If some class fields are provided but not all, set id_class to null
+              id_class = null;
+            } else {
+              // Find department by name
+              const [department] = await db
+                .select({ id: departments.id })
+                .from(departments)
+                .where(and(
+                  eq(departments.name, department_name),
+                  isNull(departments.deleted_at)
+                ))
+                .limit(1);
+
+              if (!department) {
+                errors.push({
+                  index: i,
+                  nip: nip,
+                  error: `Department '${department_name}' not found`
+                });
+                continue;
+              }
+
+              // Find academic year by year
+              const [academic_year_record] = await db
+                .select({ id: academicYears.id })
+                .from(academicYears)
+                .where(and(
+                  eq(academicYears.year, academic_year),
+                  isNull(academicYears.deleted_at)
+                ))
+                .limit(1);
+
+              if (!academic_year_record) {
+                errors.push({
+                  index: i,
+                  nip: nip,
+                  error: `Academic year '${academic_year}' not found`
+                });
+                continue;
+              }
+
+              // Find class by grade, subgrade, department, and academic year
+              const class_where_conditions = [
+                eq(classes.grade, grade),
+                eq(classes.id_department, department.id),
+                eq(classes.id_academic_year, academic_year_record.id),
+                isNull(classes.deleted_at)
+              ];
+
+              // Add subgrade condition if provided
+              if (subgrade) {
+                class_where_conditions.push(eq(classes.subgrade, String(subgrade)));
+              } else {
+                class_where_conditions.push(isNull(classes.subgrade));
+              }
+
+              const [class_record] = await db
+                .select({ id: classes.id })
+                .from(classes)
+                .where(and(...class_where_conditions))
+                .limit(1);
+
+              if (!class_record) {
+                errors.push({
+                  index: i,
+                  nip: nip,
+                  error: `Class not found for grade '${grade}', department '${department_name}', subgrade '${subgrade || 'none'}', academic year '${academic_year}'`
+                });
+                continue;
+              }
+
+              id_class = class_record.id;
+            }
+          }
+
+          // Create processed user object
+          const processed_user = {
+            full_name: full_name,
+            id_role: 3, // Teacher role
+            data: {
+              nip: nip,
+              id_class: id_class
+            }
+          };
+
+          processed_data.push(processed_user);
+
+        } catch (error) {
+          errors.push({
+            index: i,
+            error: `Processing error: ${error.message}`
+          });
+        }
+      }
+
+      // If there are errors, throw with details
+      if (errors.length > 0) {
+        const error_message = `Failed to process ${errors.length} out of ${excelData.length} records`;
+        const error = new Error(error_message);
+        error.details = errors;
+        throw error;
+      }
+
+      return {
+        data: processed_data,
+        status: 200,
+        pagination: null
+      };
+
+    } catch (error) {
+      if (error.details) {
+        // Re-throw errors with details
+        throw error;
+      }
+      throw new Error(`Failed to process Excel data: ${error.message}`);
     }
   }
 }
