@@ -46,6 +46,7 @@ import {
   validateCreateGuestForm,
   validateUpdateGuestForm,
   validateAttendanceByStudents,
+  validateAttendanceUserStats,
 } from './attendance.validation.js';
 
 import {
@@ -135,6 +136,7 @@ export const validators = {
     id: validateAttendanceId,
     query: validateAttendanceQuery,
     byStudents: validateAttendanceByStudents,
+    userStats: validateAttendanceUserStats,
   },
 
   guests: {

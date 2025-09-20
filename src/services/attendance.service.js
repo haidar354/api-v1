@@ -6,6 +6,7 @@ import uploadService from './upload.service.js';
 import { classes, departments } from '../models/classes.model.js';
 import { academicYears } from '../models/academic.model.js';
 import { students } from '../models/students.model.js';
+import { teachers } from '../models/teachers.model.js';
 
 /**
  * Attendance Service
@@ -1195,6 +1196,179 @@ class AttendanceService {
     } catch (error) {
       console.error('Get attendance by students error:', error);
       throw new Error(error.message || 'Failed to fetch attendance statistics by students');
+    }
+  }
+
+  /**
+   * Get attendance statistics by users (both teachers and students) with user information
+   * @param {Object} filters - Date range, class, and search filters
+   * @returns {Promise<Object>} Users with attendance statistics
+   */
+  static async getAttendanceUserStats(filters = {}) {
+    try {
+      const {
+        start_date,
+        end_date,
+        id_class,
+        id_role,
+        include_relations = false,
+        full_name
+      } = filters;
+
+      // Build where conditions for users
+      const user_where_conditions = [isNull(users.deleted_at)];
+
+      // Add full_name search filter
+      if (full_name) {
+        user_where_conditions.push(like(users.full_name, `%${full_name}%`));
+      }
+
+      // Add role filter if specified
+      if (id_role) {
+        user_where_conditions.push(eq(users.id_role, id_role));
+      }
+
+      // Get all users (both teachers and students) with their role-specific data
+      const users_query = db
+        .select({
+          id: users.id,
+          id_role: users.id_role,
+          full_name: users.full_name,
+          data: users.data,
+          // Teacher data (if role 3)
+          teacher_id: teachers.id,
+          teacher_nip: teachers.nip,
+          teacher_id_class: teachers.id_class,
+          // Student data (if role 4)
+          student_id: students.id,
+          student_nis: students.nis,
+          student_id_class: students.id_class,
+        })
+        .from(users)
+        .leftJoin(teachers, and(
+          eq(users.id, teachers.id_user),
+          isNull(teachers.deleted_at)
+        ))
+        .leftJoin(students, and(
+          eq(users.id, students.id_user),
+          isNull(students.deleted_at)
+        ))
+        .where(and(...user_where_conditions));
+
+      // Add class filter if specified
+      if (id_class) {
+        users_query.where(and(
+          ...user_where_conditions,
+          sql`(${teachers.id_class} = ${id_class} OR ${students.id_class} = ${id_class})`
+        ));
+      }
+
+      // Filter only teachers (role 3) and students (role 4) if no specific role is provided
+      if (!id_role) {
+        users_query.where(and(
+          ...user_where_conditions,
+          sql`${users.id_role} IN (3, 4)`
+        ));
+      }
+
+      const users_list = await users_query.orderBy(desc(users.created_at));
+
+      // For each user, get attendance statistics
+      const users_with_stats = await Promise.all(
+        users_list.map(async (user_item) => {
+          // Build where conditions for attendance stats
+          const attendance_where_conditions = [
+            isNull(attendance.deleted_at),
+            eq(attendance.id_user, user_item.id)
+          ];
+
+          if (start_date) {
+            attendance_where_conditions.push(gte(attendance.date, start_date));
+          }
+
+          if (end_date) {
+            attendance_where_conditions.push(lte(attendance.date, end_date));
+          }
+
+          // Get attendance statistics for this user
+          const stats_results = await db
+            .select({
+              status: attendance.status,
+              count: count()
+            })
+            .from(attendance)
+            .where(and(...attendance_where_conditions))
+            .groupBy(attendance.status);
+
+          // Initialize statistics object
+          const statistics = {
+            total: 0,
+            hadir: 0,
+            izin: 0,
+            sakit: 0,
+            alpha: 0,
+            terlambat: 0,
+            cuti: 0,
+            dinas: 0
+          };
+
+          // Process statistics results
+          stats_results.forEach(result => {
+            const status_array = Array.isArray(result.status) ? result.status : [result.status];
+            status_array.forEach(status => {
+              if (statistics.hasOwnProperty(status)) {
+                statistics[status] += result.count;
+                statistics.total += result.count;
+              }
+            });
+          });
+
+          // Determine which role-specific ID to use (teacher_id or student_id)
+          const role_specific_id = user_item.id_role === 3 ? user_item.teacher_id : user_item.student_id;
+          
+          // Build user data structure based on role
+          const user_data = {
+            id: user_item.id,
+            full_name:user_item.full_name,
+            id_role: user_item.id_role,
+            data: {}
+          };
+
+          // Add role-specific data
+          if (user_item.id_role === 3) {
+            // Teacher data
+            user_data.data.nip = user_item.teacher_nip;
+            user_data.data.id_class = user_item.teacher_id_class;
+          } else if (user_item.id_role === 4) {
+            // Student data
+            user_data.data.nis = user_item.student_nis;
+            user_data.data.id_class = user_item.student_id_class;
+          }
+
+          return {
+            id: role_specific_id,
+            user: user_data,
+            statistics,
+            date_range: {
+              start_date,
+              end_date
+            }
+          };
+        })
+      );
+
+      // Filter out users without role-specific records (teacher_id or student_id is null)
+      const filtered_users_with_stats = users_with_stats.filter(user => user.id !== null);
+
+      return {
+        data: filtered_users_with_stats,
+        status: 200,
+        pagination: null
+      };
+
+    } catch (error) {
+      console.error('Get attendance user stats error:', error);
+      throw new Error(error.message || 'Failed to fetch attendance statistics by users');
     }
   }
 }

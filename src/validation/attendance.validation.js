@@ -278,6 +278,39 @@ export const attendanceByStudentsSchema = z.object({
 });
 
 /**
+ * Attendance user stats validation schemas
+ */
+export const attendanceUserStatsSchema = z.object({
+  start_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+
+  end_date: z.string().optional()
+    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+
+  id_class: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Class ID must be positive'),
+
+  id_role: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
+    .refine((val) => val === undefined || (val > 0), 'Role ID must be positive'),
+
+  include_relations: z.string().optional()
+    .transform((val) => val === 'true' || val === '1')
+    .default(false),
+
+  full_name: z.string().optional()
+    .transform((val) => val?.trim())
+    .refine((val) => !val || val.length >= 2, 'Full name search must be at least 2 characters'),
+}).refine((data) => {
+  if (data.start_date && data.end_date) {
+    return new Date(data.start_date) <= new Date(data.end_date);
+  }
+  return true;
+}, {
+  message: 'Start date must be before or equal to end date',
+  path: ['end_date'],
+});
+
+/**
  * Guest validation schemas
  */
 export const guestSchema = z.object({
@@ -409,3 +442,4 @@ export const validateAttendanceReport = zValidator('json', attendanceReportSchem
 
 export const validateAttendanceByClass = zValidator('query', attendanceByClassSchema);
 export const validateAttendanceByStudents = zValidator('query', attendanceByStudentsSchema);
+export const validateAttendanceUserStats = zValidator('query', attendanceUserStatsSchema);

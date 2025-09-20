@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
-import { AttendanceController } from '../controllers/attendance.controller.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { Hono } from "hono";
+import { AttendanceController } from "../controllers/attendance.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import {
   validateCreateAttendance,
   validateUpdateAttendance,
@@ -13,8 +13,8 @@ import {
   validateGuestQuery,
   validateAttendanceByClass,
   validateAttendanceByStudents,
-} from '../validation/attendance.validation.js';
-
+  validateAttendanceUserStats,
+} from "../validation/attendance.validation.js";
 
 /**
  * Attendance Routes
@@ -29,7 +29,8 @@ const attendanceRoute = new Hono();
  * Create new guest record with signature upload
  * Uses form-data for signature file upload
  */
-attendanceRoute.post('/guests',
+attendanceRoute.post(
+  "/guests",
   validateCreateGuestForm,
   AttendanceController.createGuest
 );
@@ -38,7 +39,8 @@ attendanceRoute.post('/guests',
  * GET /attendance/guests
  * Get guest records with filtering and pagination
  */
-attendanceRoute.get('/guests',
+attendanceRoute.get(
+  "/guests",
   validateGuestQuery,
   AttendanceController.getGuests
 );
@@ -47,7 +49,8 @@ attendanceRoute.get('/guests',
  * GET /attendance/guests/:id
  * Get guest record by ID
  */
-attendanceRoute.get('/guests/:id',
+attendanceRoute.get(
+  "/guests/:id",
   validateGuestId,
   AttendanceController.getGuestById
 );
@@ -57,7 +60,8 @@ attendanceRoute.get('/guests/:id',
  * Update guest record with optional signature upload
  * Uses form-data for signature file upload
  */
-attendanceRoute.put('/guests/:id',
+attendanceRoute.put(
+  "/guests/:id",
   authMiddleware,
   validateGuestId,
   validateUpdateGuestForm,
@@ -68,7 +72,8 @@ attendanceRoute.put('/guests/:id',
  * DELETE /attendance/guests/:id
  * Delete guest record
  */
-attendanceRoute.delete('/guests/:id',
+attendanceRoute.delete(
+  "/guests/:id",
   authMiddleware,
   validateGuestId,
   AttendanceController.deleteGuest
@@ -78,7 +83,8 @@ attendanceRoute.delete('/guests/:id',
  * POST /attendance/guests/:id/restore
  * Restore guest record
  */
-attendanceRoute.post('/guests/:id/restore',
+attendanceRoute.post(
+  "/guests/:id/restore",
   authMiddleware,
   validateGuestId,
   AttendanceController.restoreGuest
@@ -90,7 +96,8 @@ attendanceRoute.post('/guests/:id/restore',
  * POST /attendance
  * Create new attendance record
  */
-attendanceRoute.post('/',
+attendanceRoute.post(
+  "/",
   authMiddleware,
   validateCreateAttendance,
   AttendanceController.createAttendance
@@ -100,7 +107,8 @@ attendanceRoute.post('/',
  * GET /attendance
  * Get attendance records with filtering and pagination
  */
-attendanceRoute.get('/',
+attendanceRoute.get(
+  "/",
   validateAttendanceQuery,
   AttendanceController.getAttendances
 );
@@ -109,7 +117,8 @@ attendanceRoute.get('/',
  * GET /attendance/class
  * Get attendance statistics by class
  */
-attendanceRoute.get('/class',
+attendanceRoute.get(
+  "/class",
   validateAttendanceByClass,
   AttendanceController.getAttendanceByClass
 );
@@ -118,24 +127,34 @@ attendanceRoute.get('/class',
  * GET /attendance/students
  * Get attendance statistics by students
  */
-attendanceRoute.get('/students',
+attendanceRoute.get(
+  "/students",
   validateAttendanceByStudents,
   AttendanceController.getAttendanceByStudents
+);
+
+/**
+ * GET /attendance/users
+ * Get attendance statistics by users (both teachers and students)
+ */
+attendanceRoute.get(
+  "/users",
+  validateAttendanceUserStats,
+  AttendanceController.getAttendanceUserStats
 );
 
 /**
  * GET /attendance/stats
  * Get attendance statistics
  */
-attendanceRoute.get('/stats',
-  AttendanceController.getAttendanceStats
-);
+attendanceRoute.get("/stats", AttendanceController.getAttendanceStats);
 
 /**
  * GET /attendance/info
  * Get attendance module information
  */
-attendanceRoute.get('/info',
+attendanceRoute.get(
+  "/info",
   authMiddleware,
   AttendanceController.getAttendanceInfo
 );
@@ -144,7 +163,8 @@ attendanceRoute.get('/info',
  * POST /attendance/bulk
  * Create multiple attendance records
  */
-attendanceRoute.post('/bulk',
+attendanceRoute.post(
+  "/bulk",
   authMiddleware,
   validateBulkAttendance,
   AttendanceController.createBulkAttendance
@@ -154,7 +174,8 @@ attendanceRoute.post('/bulk',
  * GET /attendance/:id
  * Get attendance record by ID
  */
-attendanceRoute.get('/:id',
+attendanceRoute.get(
+  "/:id",
   authMiddleware,
   validateAttendanceId,
   AttendanceController.getAttendanceById
@@ -164,7 +185,8 @@ attendanceRoute.get('/:id',
  * PUT /attendance/:id
  * Update attendance record
  */
-attendanceRoute.put('/:id',
+attendanceRoute.put(
+  "/:id",
   authMiddleware,
   validateAttendanceId,
   validateUpdateAttendance,
@@ -175,7 +197,8 @@ attendanceRoute.put('/:id',
  * DELETE /attendance/:id
  * Delete attendance record
  */
-attendanceRoute.delete('/:id',
+attendanceRoute.delete(
+  "/:id",
   authMiddleware,
   validateAttendanceId,
   AttendanceController.deleteAttendance
@@ -185,7 +208,8 @@ attendanceRoute.delete('/:id',
  * POST /attendance/:id/restore
  * Restore attendance record
  */
-attendanceRoute.post('/:id/restore',
+attendanceRoute.post(
+  "/:id/restore",
   authMiddleware,
   validateAttendanceId,
   AttendanceController.restoreAttendance
