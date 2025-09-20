@@ -1,5 +1,5 @@
 import { UsersService } from '../services/users.service.js';
-import { jsonResponse, errorResponse } from '../utils/response.utils.js';
+import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
  * Users Controller

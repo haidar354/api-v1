@@ -1,5 +1,5 @@
 import { AcademicService } from '../services/academic.service.js';
-import { jsonResponse, errorResponse } from '../utils/response.utils.js';
+import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
  * Academic Controller

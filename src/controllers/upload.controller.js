@@ -1,5 +1,7 @@
 import uploadService from '../services/upload.service.js';
 import { fileConstraints } from "../validation/upload.validation.js";
+import { jsonResponse, errorResponse } from "../utils/response.util.js";
+import { readExcel } from "../utils/excel.util.js";
 
 /**
  * Upload Controller
@@ -22,18 +24,68 @@ export class UploadController {
       const uploadedFiles = await uploadService.saveFiles(files, folder_name || null);
 
       // Return success response
-      return c.json({
-        message: `Successfully uploaded ${uploadedFiles.length} file(s)`,
-        uploaded_files: uploadedFiles
+      return jsonResponse({
+        data: uploadedFiles
       }, 200);
 
     } catch (error) {
       console.error('Upload error:', error);
 
       // Return error response
-      return c.json({
-        message: error.message || 'Failed to upload files',
-      }, 500);
+      return errorResponse(error.message || 'Failed to upload files', 500);
+    }
+  }
+
+  /**
+   * Handle Excel file upload and read data
+   * @param {Object} c - Hono context object
+   * @returns {Promise<Response>} JSON response with Excel data
+   */
+  static async uploadExcel(c) {
+    try {
+      // Get validated files from middleware
+      const files = c.get('validatedFiles'); // Files validated by custom middleware
+      
+      // Validate that at least one file is provided
+      if (!files || files.length === 0) {
+        return errorResponse('No Excel file provided', 400);
+      }
+      
+      // Validate that only one Excel file is uploaded
+      if (files.length > 1) {
+        return errorResponse('Only one Excel file can be processed at a time', 400);
+      }
+      
+      const excel_file = files[0];
+      
+      // Validate file extension
+      const allowed_excel_extensions = ['.xlsx', '.xls'];
+      const file_extension = excel_file.name.toLowerCase().substring(excel_file.name.lastIndexOf('.'));
+      
+      if (!allowed_excel_extensions.includes(file_extension)) {
+        return errorResponse('Only Excel files (.xlsx, .xls) are allowed', 400);
+      }
+      
+      // Upload file to public/excel/ folder using the existing saveFiles service
+      const uploaded_files = await uploadService.saveFiles([excel_file], 'excel');
+      
+      if (!uploaded_files || uploaded_files.length === 0) {
+        return errorResponse('Failed to upload Excel file', 500);
+      }
+      
+      const uploaded_file_path = uploaded_files[0];
+      
+      // Read Excel data using the excel utility
+      const excel_data = await readExcel(uploaded_file_path);
+      
+      // Return the Excel data as array of objects
+      return jsonResponse(excel_data, 200);
+      
+    } catch (error) {
+      console.error('Excel upload error:', error);
+      
+      // Return error response
+      return errorResponse(error.message || 'Failed to process Excel file', 500);
     }
   }
 
@@ -44,7 +96,7 @@ export class UploadController {
    */
   static async getUploadInfo(c) {
     try {
-      return c.json({
+      return jsonResponse({
         message: 'Upload endpoint is ready',
         info: {
           max_file_size: `${fileConstraints.maxFileSize / (1024 * 1024)}MB`,
@@ -64,9 +116,7 @@ export class UploadController {
         }
       });
     } catch (error) {
-      return c.json({
-        message: 'Failed to get upload info'
-      }, 500);
+      return errorResponse(error.message || 'Failed to get upload info', 500);
     }
   }
 }

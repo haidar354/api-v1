@@ -1,5 +1,5 @@
 import attendanceService from '../services/attendance.service.js';
-import { jsonResponse, errorResponse } from '../utils/response.utils.js';
+import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
  * Attendance Controller

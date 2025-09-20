@@ -26,6 +26,17 @@ uploadRoute.post('/',
 );
 
 /**
+ * POST /upload/excel
+ * Upload Excel file and return parsed data
+ * Uses custom file validation middleware for Excel files
+ */
+uploadRoute.post('/excel', 
+  authMiddleware,
+  validateFileUpload,  // Custom middleware for file validation
+  UploadController.uploadExcel
+);
+
+/**
  * GET /upload/info
  * Get upload endpoint information and configuration
  */

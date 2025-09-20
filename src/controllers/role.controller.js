@@ -1,5 +1,5 @@
 import { RoleService } from '../services/role.service.js';
-import { jsonResponse, errorResponse } from '../utils/response.utils.js';
+import { jsonResponse, errorResponse } from '../utils/response.util.js';
 
 /**
  * Role Controller

@@ -117,6 +117,9 @@ export const userQuerySchema = z.object({
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
     .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
   role: z.string().optional(),
+  include_role: z.string().optional()
+    .transform((val) => val === 'true' || val === '1')
+    .default(false),
   search: z.string().optional().transform((val) => val?.trim()),
 });
 
