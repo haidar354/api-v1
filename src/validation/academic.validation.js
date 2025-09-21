@@ -410,6 +410,52 @@ export const principalAgendaQuerySchema = z
         (val) => val > 0 && val <= 100,
         "Limit must be between 1 and 100"
       ),
+
+    // Parameter baru untuk count
+    count: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    // Parameter baru untuk filter bulan
+    month: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    monthSet: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .refine(
+        (val) => !val || (val >= 1 && val <= 12),
+        "Month must be between 1 and 12"
+      ),
+
+    // Parameter baru untuk filter tahun
+    year: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    yearSet: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .refine(
+        (val) => !val || (val >= 1900 && val <= 2100),
+        "Year must be between 1900 and 2100"
+      ),
+
+    // Parameter baru untuk statistics monthly
+    statistics_month: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
   })
   .refine(
     (data) => {
@@ -421,6 +467,45 @@ export const principalAgendaQuerySchema = z
     {
       message: "Start date must be before or equal to end date",
       path: ["end_date"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Jika month=true, monthSet harus ada
+      if (data.month && !data.monthSet) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "monthSet is required when month=true",
+      path: ["monthSet"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Jika year=true, yearSet harus ada
+      if (data.year && !data.yearSet) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "yearSet is required when year=true",
+      path: ["yearSet"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Jika statistics_month=true dan year=true, yearSet harus ada
+      if (data.statistics_month && data.year && !data.yearSet) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "yearSet is required when statistics_month=true and year=true",
+      path: ["yearSet"],
     }
   );
 
@@ -664,6 +749,50 @@ export const letterQuerySchema = z
         (val) => val > 0 && val <= 100,
         "Limit must be between 1 and 100"
       ),
+
+    // New count parameters
+    count: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    month: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    monthSet: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .refine(
+        (val) => val === undefined || (val >= 1 && val <= 12),
+        "Month must be between 1 and 12"
+      ),
+
+    year: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
+
+    yearSet: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .refine(
+        (val) => val === undefined || (val >= 1900 && val <= 2100),
+        "Year must be between 1900 and 2100"
+      ),
+
+    // Statistics parameter
+    statistics_month: z
+      .string()
+      .optional()
+      .transform((val) => val === "true")
+      .default(false),
   })
   .refine(
     (data) => {
@@ -676,8 +805,46 @@ export const letterQuerySchema = z
       message: "Start date must be before or equal to end date",
       path: ["end_date"],
     }
+  )
+  .refine(
+    (data) => {
+      // If month is true, monthSet must be provided
+      if (data.month && !data.monthSet) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "monthSet is required when month=true",
+      path: ["monthSet"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If year is true, yearSet must be provided
+      if (data.year && !data.yearSet) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "yearSet is required when year=true",
+      path: ["yearSet"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If statistics_month is true, year and yearSet must be provided
+      if (data.statistics_month && (!data.year || !data.yearSet)) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "year=true and yearSet are required when statistics_month=true",
+      path: ["statistics_month"],
+    }
   );
-
 /**
  * Bulk letters validation schemas
  */

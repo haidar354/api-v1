@@ -6,90 +6,466 @@ import { students, users, classes, departments, academicYears } from '../models/
  * Students Service
  * Handles all CRUD operations for students with Drizzle ORM
  */
+
 export class StudentsService {
   /**
    * Create a new student
    * @param {Object} studentData - Student data
    * @returns {Promise<Object>} Created student
    */
+  static async verifyStudentExists(nis, userId = null) {
+    try {
+      console.log(`Verifying student exists: NIS=${nis}, UserID=${userId}`);
+
+      const where_conditions = [
+        eq(students.nis, nis),
+        isNull(students.deleted_at),
+      ];
+
+      if (userId) {
+        where_conditions.push(eq(students.id_user, userId));
+      }
+
+      const [student] = await db
+        .select({
+          id: students.id,
+          id_user: students.id_user,
+          nis: students.nis,
+          created_at: students.created_at,
+          user: {
+            id: users.id,
+            full_name: users.full_name,
+          },
+        })
+        .from(students)
+        .leftJoin(users, eq(students.id_user, users.id))
+        .where(and(...where_conditions))
+        .limit(1);
+
+      const exists = !!student;
+      console.log(
+        `Verification result: exists=${exists}`,
+        student ? { id: student.id, nis: student.nis } : null
+      );
+
+      return {
+        exists,
+        student_data: student || null,
+      };
+    } catch (error) {
+      console.error("Error verifying student exists:", error);
+      throw new Error(`Failed to verify student: ${error.message}`);
+    }
+  }
+
+  static async processExcelData(excelData) {
+    try {
+      console.log("Processing Excel data:", excelData);
+
+      if (!Array.isArray(excelData) || excelData.length === 0) {
+        throw new Error("Excel data is empty or invalid");
+      }
+
+      const processed_data = [];
+      const errors = [];
+
+      for (let i = 0; i < excelData.length; i++) {
+        try {
+          const row = excelData[i];
+          console.log(`Processing row ${i + 1}:`, row);
+
+          // Skip empty rows
+          if (!row || Object.keys(row).length === 0) {
+            console.log(`Skipping empty row ${i + 1}`);
+            continue;
+          }
+
+          // Normalize keys to handle case-insensitive matching
+          const normalized_row = {};
+          Object.keys(row).forEach((key) => {
+            const normalized_key = key
+              .toLowerCase()
+              .trim()
+              .replace(/\s+/g, " ");
+            normalized_row[normalized_key] =
+              typeof row[key] === "string" ? row[key].trim() : row[key];
+          });
+
+          console.log("Normalized row:", normalized_row);
+
+          // Extract data with multiple possible key variations
+          const full_name =
+            normalized_row["nama lengkap"] ||
+            row["Nama Lengkap"] ||
+            normalized_row["nama"] ||
+            row["Nama"];
+
+          const grade =
+            normalized_row["kelas"] ||
+            row["Kelas"] ||
+            normalized_row["tingkat"] ||
+            row["Tingkat"];
+
+          const department_name =
+            normalized_row["jurusan"] ||
+            row["Jurusan"] ||
+            normalized_row["program"] ||
+            row["Program"];
+
+          const subgrade =
+            normalized_row["subkelas"] ||
+            row["Subkelas"] ||
+            normalized_row["sub kelas"] ||
+            row["Sub Kelas"];
+
+          let nis =
+            normalized_row["nis"] ||
+            row["NIS"] ||
+            normalized_row["nomor induk"] ||
+            row["Nomor Induk"];
+
+          const academic_year =
+            normalized_row["tahun ajaran"] ||
+            row["Tahun Ajaran"] ||
+            normalized_row["tahun"] ||
+            row["Tahun"];
+
+          // Ensure NIS is string
+          if (nis !== undefined && nis !== null) {
+            nis = String(nis).trim();
+          }
+
+          console.log("Extracted data:", {
+            full_name,
+            grade,
+            department_name,
+            subgrade,
+            nis,
+            academic_year,
+          });
+
+          // Validate required fields
+          if (
+            !full_name ||
+            !grade ||
+            !department_name ||
+            !nis ||
+            !academic_year
+          ) {
+            const missing_fields = [];
+            if (!full_name) missing_fields.push("Nama Lengkap");
+            if (!grade) missing_fields.push("Kelas");
+            if (!department_name) missing_fields.push("Jurusan");
+            if (!nis) missing_fields.push("NIS");
+            if (!academic_year) missing_fields.push("Tahun Ajaran");
+
+            errors.push({
+              index: i + 1,
+              nama: full_name || "Unknown",
+              error: `Missing required fields: ${missing_fields.join(", ")}`,
+            });
+            continue;
+          }
+
+          // Check for duplicate NIS in current batch
+          const duplicate_in_batch = processed_data.find(
+            (item) => item.data.nis === nis
+          );
+          if (duplicate_in_batch) {
+            errors.push({
+              index: i + 1,
+              nama: full_name,
+              nis: nis,
+              error: `Duplicate NIS found in batch: ${nis}`,
+            });
+            continue;
+          }
+
+          // Check if NIS already exists in database
+          const existing_nis = await db
+            .select({ id: students.id, nis: students.nis })
+            .from(students)
+            .where(and(eq(students.nis, nis), isNull(students.deleted_at)))
+            .limit(1);
+
+          if (existing_nis.length > 0) {
+            errors.push({
+              index: i + 1,
+              nama: full_name,
+              nis: nis,
+              error: `NIS already exists in database: ${nis}`,
+            });
+            continue;
+          }
+
+          // Find department by name (case-insensitive)
+          const [department] = await db
+            .select({ id: departments.id, short_name: departments.short_name })
+            .from(departments)
+            .where(
+              and(
+                sql`LOWER(${departments.short_name}) = LOWER(${department_name})`,
+                isNull(departments.deleted_at)
+              )
+            )
+            .limit(1);
+
+          if (!department) {
+            errors.push({
+              index: i + 1,
+              nama: full_name,
+              nis: nis,
+              error: `Department not found: '${department_name}'`,
+            });
+            continue;
+          }
+
+          // Find academic year by year
+          const [academic_year_record] = await db
+            .select({ id: academicYears.id, year: academicYears.year })
+            .from(academicYears)
+            .where(
+              and(
+                eq(academicYears.year, academic_year),
+                isNull(academicYears.deleted_at)
+              )
+            )
+            .limit(1);
+
+          if (!academic_year_record) {
+            errors.push({
+              index: i + 1,
+              nama: full_name,
+              nis: nis,
+              error: `Academic year not found: '${academic_year}'`,
+            });
+            continue;
+          }
+
+          // Find class by grade, subgrade (optional), department, and academic year
+          const class_where_conditions = [
+            eq(classes.grade, grade),
+            eq(classes.id_department, department.id),
+            eq(classes.id_academic_year, academic_year_record.id),
+            isNull(classes.deleted_at),
+          ];
+
+          // Add subgrade condition if provided and not empty
+          if (subgrade && String(subgrade).trim()) {
+            class_where_conditions.push(
+              eq(classes.subgrade, String(subgrade).trim())
+            );
+          }
+
+          const class_records = await db
+            .select({
+              id: classes.id,
+              grade: classes.grade,
+              subgrade: classes.subgrade,
+            })
+            .from(classes)
+            .where(and(...class_where_conditions));
+
+          let class_record;
+
+          if (class_records.length === 0) {
+            errors.push({
+              index: i + 1,
+              nama: full_name,
+              nis: nis,
+              error: `Class not found for: grade '${grade}', department '${department_name}', subgrade '${
+                subgrade || "none"
+              }', academic year '${academic_year}'`,
+            });
+            continue;
+          } else if (class_records.length === 1) {
+            class_record = class_records[0];
+          } else {
+            // Multiple classes found, pick the first one or add logic to choose
+            class_record = class_records[0];
+            console.log(
+              `Multiple classes found for grade '${grade}', department '${department_name}', using first match`
+            );
+          }
+
+          // Create processed user object
+          const processed_user = {
+            full_name: full_name,
+            id_role: 4, // Student role - make sure this role exists in your database
+            data: {
+              nis: nis,
+              id_class: class_record.id,
+              // Add additional user data if needed
+              email: null, // You might want to generate email or leave null
+              nisn: null, // If you need NISN field
+            },
+          };
+
+          processed_data.push(processed_user);
+          console.log(`✅ Row ${i + 1} processed successfully`);
+        } catch (error) {
+          console.error(`Error processing row ${i + 1}:`, error);
+          errors.push({
+            index: i + 1,
+            nama:
+              excelData[i]?.["Nama Lengkap"] ||
+              excelData[i]?.["nama lengkap"] ||
+              "Unknown",
+            error: `Processing error: ${error.message}`,
+          });
+        }
+      }
+
+      console.log(
+        `Excel processing completed: ${processed_data.length} successful, ${errors.length} failed`
+      );
+
+      // If there are errors, throw with details
+      if (errors.length > 0) {
+        const error_message = `Failed to process ${errors.length} out of ${excelData.length} records`;
+        const error = new Error(error_message);
+        error.details = errors;
+        throw error;
+      }
+
+      return {
+        data: processed_data,
+        status: 200,
+        pagination: null,
+      };
+    } catch (error) {
+      console.error("processExcelData error:", error);
+      if (error.details) {
+        // Re-throw errors with details
+        throw error;
+      }
+      throw new Error(`Failed to process Excel data: ${error.message}`);
+    }
+  }
+
   static async createStudent(studentData) {
     try {
-      // Check if user exists and not soft deleted
+      console.log("Creating student with data:", studentData);
+
+      // Existing validation code...
       const [existing_user] = await db
         .select()
         .from(users)
-        .where(and(
-          eq(users.id, studentData.id_user),
-          isNull(users.deleted_at)
-        ))
+        .where(and(eq(users.id, studentData.id_user), isNull(users.deleted_at)))
         .limit(1);
 
       if (!existing_user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
-      // Check if class exists and not soft deleted
       const [existing_class] = await db
         .select()
         .from(classes)
-        .where(and(
-          eq(classes.id, studentData.id_class),
-          isNull(classes.deleted_at)
-        ))
+        .where(
+          and(eq(classes.id, studentData.id_class), isNull(classes.deleted_at))
+        )
         .limit(1);
 
       if (!existing_class) {
-        throw new Error('Class not found');
+        throw new Error("Class not found");
       }
 
-      // Check if NIS already exists (excluding soft deleted)
       const existing_nis = await db
         .select()
         .from(students)
-        .where(and(
-          eq(students.nis, studentData.nis),
-          isNull(students.deleted_at)
-        ))
+        .where(
+          and(eq(students.nis, studentData.nis), isNull(students.deleted_at))
+        )
         .limit(1);
 
       if (existing_nis.length > 0) {
-        throw new Error('NIS already exists');
+        throw new Error("NIS already exists");
       }
 
-      // Check if user is already a student (excluding soft deleted)
       const existing_student = await db
         .select()
         .from(students)
-        .where(and(
-          eq(students.id_user, studentData.id_user),
-          isNull(students.deleted_at)
-        ))
+        .where(
+          and(
+            eq(students.id_user, studentData.id_user),
+            isNull(students.deleted_at)
+          )
+        )
         .limit(1);
 
       if (existing_student.length > 0) {
-        throw new Error('User is already registered as a student');
+        throw new Error("User is already registered as a student");
       }
 
       // Insert new student
-      const insert_result = await db
-        .insert(students)
-        .values(studentData);
+      const insert_result = await db.insert(students).values(studentData);
 
-      // Get the inserted student by ID with relationships
-      const id_insert = insert_result[0].insertId;
-      const student_result = await this.getStudentById(id_insert);
+      console.log("Insert result:", insert_result);
+
+      // ⚠️ PERBAIKAN: Handle different insert result formats
+      let student_id;
+      if (insert_result[0]?.insertId) {
+        student_id = insert_result[0].insertId;
+      } else if (insert_result.insertId) {
+        student_id = insert_result.insertId;
+      } else if (insert_result[0]?.id) {
+        student_id = insert_result[0].id;
+      } else {
+        // Fallback: query by NIS to find the created student
+        const [created_student] = await db
+          .select({ id: students.id })
+          .from(students)
+          .where(
+            and(
+              eq(students.nis, studentData.nis),
+              eq(students.id_user, studentData.id_user),
+              isNull(students.deleted_at)
+            )
+          )
+          .limit(1);
+
+        if (created_student) {
+          student_id = created_student.id;
+        }
+      }
+
+      if (!student_id) {
+        throw new Error("Failed to get student ID after insert");
+      }
+
+      // Get the full student data
+      const student_result = await this.getStudentById(student_id);
 
       if (!student_result.data) {
-        throw new Error('Failed to retrieve created student');
+        // ⚠️ PERBAIKAN: Jika getStudentById gagal, tetap return success dengan data minimal
+        console.log(
+          "Warning: Could not retrieve full student data, but insert was successful"
+        );
+        return {
+          data: {
+            id: student_id,
+            nis: studentData.nis,
+            id_user: studentData.id_user,
+            id_class: studentData.id_class,
+            created: true,
+          },
+          status: 201,
+          pagination: null,
+        };
       }
+
+      console.log("Student created successfully:", {
+        id: student_id,
+        nis: studentData.nis,
+      });
 
       return {
         data: student_result.data,
         status: 201,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
-      console.log("ERROR: ", error);
+      console.log("ERROR creating student: ", error);
       throw new Error(`Failed to create student: ${error.message}`);
     }
   }
@@ -104,10 +480,10 @@ export class StudentsService {
       const {
         page = 1,
         limit = 10,
-        search = '',
-        class: class_filter = '',
-        sortBy = 'created_at',
-        sortOrder = 'desc'
+        search = "",
+        class: class_filter = "",
+        sortBy = "created_at",
+        sortOrder = "desc",
       } = options;
 
       const offset = (page - 1) * limit;
@@ -129,9 +505,10 @@ export class StudentsService {
       }
 
       // Build order by
-      const order_by = sortOrder === 'asc'
-        ? asc(students[sortBy] || students.created_at)
-        : desc(students[sortBy] || students.created_at);
+      const order_by =
+        sortOrder === "asc"
+          ? asc(students[sortBy] || students.created_at)
+          : desc(students[sortBy] || students.created_at);
 
       // Query students with relationships
       const students_list = await db
@@ -145,16 +522,27 @@ export class StudentsService {
           user: {
             id: users.id,
             full_name: users.full_name,
-            data: users.data
+            data: users.data,
           },
           class: {
             id: classes.id,
-            grade: classes.grade
-          }
+            grade: classes.grade,
+            subgrade: classes.subgrade,
+          },
+          departments: {
+            id: departments.id,
+            short_name: departments.short_name,
+          },
+          academicYears: {
+            id: academicYears.id,
+            year: academicYears.year,
+          },
         })
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
+        .leftJoin(departments, eq(classes.id_department, departments.id))
+        .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
         .where(and(...where_conditions))
         .orderBy(order_by)
         .limit(limit)
@@ -179,7 +567,7 @@ export class StudentsService {
           items_per_page: limit,
           has_next_page: page < total_pages,
           has_prev_page: page > 1,
-        }
+        },
       };
     } catch (error) {
       throw new Error(`Failed to get students: ${error.message}`);
@@ -204,26 +592,23 @@ export class StudentsService {
           user: {
             id: users.id,
             full_name: users.full_name,
-            data: users.data
+            data: users.data,
           },
           class: {
             id: classes.id,
-            grade: classes.grade
-          }
+            grade: classes.grade,
+          },
         })
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
-        .where(and(
-          eq(students.id, studentId),
-          isNull(students.deleted_at)
-        ))
+        .where(and(eq(students.id, studentId), isNull(students.deleted_at)))
         .limit(1);
 
       return {
         data: student || null,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to get student: ${error.message}`);
@@ -241,7 +626,7 @@ export class StudentsService {
       // Check if student exists and not soft deleted
       const existing_student_result = await this.getStudentById(studentId);
       if (!existing_student_result.data) {
-        throw new Error('Student not found');
+        throw new Error("Student not found");
       }
 
       // If user ID is being updated, check if user exists
@@ -249,29 +634,30 @@ export class StudentsService {
         const [existing_user] = await db
           .select()
           .from(users)
-          .where(and(
-            eq(users.id, updateData.id_user),
-            isNull(users.deleted_at)
-          ))
+          .where(
+            and(eq(users.id, updateData.id_user), isNull(users.deleted_at))
+          )
           .limit(1);
 
         if (!existing_user) {
-          throw new Error('User not found');
+          throw new Error("User not found");
         }
 
         // Check if user is already a student (excluding current student)
         const existing_user_student = await db
           .select()
           .from(students)
-          .where(and(
-            eq(students.id_user, updateData.id_user),
-            isNull(students.deleted_at),
-            ne(students.id, studentId)
-          ))
+          .where(
+            and(
+              eq(students.id_user, updateData.id_user),
+              isNull(students.deleted_at),
+              ne(students.id, studentId)
+            )
+          )
           .limit(1);
 
         if (existing_user_student.length > 0) {
-          throw new Error('User is already registered as a student');
+          throw new Error("User is already registered as a student");
         }
       }
 
@@ -280,31 +666,35 @@ export class StudentsService {
         const [existing_class] = await db
           .select()
           .from(classes)
-          .where(and(
-            eq(classes.id, updateData.id_class),
-            isNull(classes.deleted_at)
-          ))
+          .where(
+            and(eq(classes.id, updateData.id_class), isNull(classes.deleted_at))
+          )
           .limit(1);
 
         if (!existing_class) {
-          throw new Error('Class not found');
+          throw new Error("Class not found");
         }
       }
 
       // If NIS is being updated, check for duplicates
-      if (updateData.nis && updateData.nis !== existing_student_result.data.nis) {
+      if (
+        updateData.nis &&
+        updateData.nis !== existing_student_result.data.nis
+      ) {
         const existing_nis = await db
           .select()
           .from(students)
-          .where(and(
-            eq(students.nis, updateData.nis),
-            isNull(students.deleted_at),
-            ne(students.id, studentId)
-          ))
+          .where(
+            and(
+              eq(students.nis, updateData.nis),
+              isNull(students.deleted_at),
+              ne(students.id, studentId)
+            )
+          )
           .limit(1);
 
         if (existing_nis.length > 0) {
-          throw new Error('NIS already exists');
+          throw new Error("NIS already exists");
         }
       }
 
@@ -318,13 +708,13 @@ export class StudentsService {
       const updated_student_result = await this.getStudentById(studentId);
 
       if (!updated_student_result.data) {
-        throw new Error('Failed to update student');
+        throw new Error("Failed to update student");
       }
 
       return {
         data: updated_student_result.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to update student: ${error.message}`);
@@ -341,7 +731,7 @@ export class StudentsService {
       // Check if student exists and not already soft deleted
       const existing_student_result = await this.getStudentById(studentId);
       if (!existing_student_result.data) {
-        throw new Error('Student not found');
+        throw new Error("Student not found");
       }
 
       // Soft delete by setting deleted_at timestamp
@@ -356,7 +746,7 @@ export class StudentsService {
       return {
         data: success,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to delete student: ${error.message}`);
@@ -378,41 +768,47 @@ export class StudentsService {
         .limit(1);
 
       if (!existing_student) {
-        throw new Error('Student not found');
+        throw new Error("Student not found");
       }
 
       if (!existing_student.deleted_at) {
-        throw new Error('Student is not deleted');
+        throw new Error("Student is not deleted");
       }
 
       // Check if NIS would conflict after restore
       const existing_nis = await db
         .select()
         .from(students)
-        .where(and(
-          eq(students.nis, existing_student.nis),
-          isNull(students.deleted_at),
-          ne(students.id, studentId)
-        ))
+        .where(
+          and(
+            eq(students.nis, existing_student.nis),
+            isNull(students.deleted_at),
+            ne(students.id, studentId)
+          )
+        )
         .limit(1);
 
       if (existing_nis.length > 0) {
-        throw new Error('Cannot restore: NIS already exists');
+        throw new Error("Cannot restore: NIS already exists");
       }
 
       // Check if user would conflict after restore
       const existing_user_student = await db
         .select()
         .from(students)
-        .where(and(
-          eq(students.id_user, existing_student.id_user),
-          isNull(students.deleted_at),
-          ne(students.id, studentId)
-        ))
+        .where(
+          and(
+            eq(students.id_user, existing_student.id_user),
+            isNull(students.deleted_at),
+            ne(students.id, studentId)
+          )
+        )
         .limit(1);
 
       if (existing_user_student.length > 0) {
-        throw new Error('Cannot restore: User is already registered as a student');
+        throw new Error(
+          "Cannot restore: User is already registered as a student"
+        );
       }
 
       // Restore student by setting deleted_at to null
@@ -425,13 +821,13 @@ export class StudentsService {
       const restored_student_result = await this.getStudentById(studentId);
 
       if (!restored_student_result.data) {
-        throw new Error('Failed to restore student');
+        throw new Error("Failed to restore student");
       }
 
       return {
         data: restored_student_result.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to restore student: ${error.message}`);
@@ -458,10 +854,12 @@ export class StudentsService {
       return {
         data: class_stats,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
-      throw new Error(`Failed to get students count by class: ${error.message}`);
+      throw new Error(
+        `Failed to get students count by class: ${error.message}`
+      );
     }
   }
 
@@ -482,15 +880,15 @@ export class StudentsService {
 
       return {
         data: {
-          status: 'healthy',
+          status: "healthy",
           timestamp: new Date().toISOString(),
           statistics: {
             total_students,
-            classes_with_students: class_stats.data.length
-          }
+            classes_with_students: class_stats.data.length,
+          },
         },
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Students service health check failed: ${error.message}`);
@@ -503,146 +901,6 @@ export class StudentsService {
    * @returns {Promise<Array>} Processed user data array
    */
   static async excelData(excelData) {
-    try {
-      const processed_data = [];
-      const errors = [];
-
-      for (let i = 0; i < excelData.length; i++) {
-        try {
-          const row = excelData[i];
-          
-          // Normalize keys to handle case-insensitive matching
-          const normalized_row = {};
-          Object.keys(row).forEach(key => {
-            const normalized_key = key.toLowerCase().trim();
-            normalized_row[normalized_key] = row[key];
-          });
-
-          // Extract data with case-insensitive key matching
-          const full_name = normalized_row['nama lengkap'] || row['Nama Lengkap'];
-          const grade = normalized_row['kelas'] || row['Kelas'];
-          const department_name = normalized_row['jurusan'] || row['Jurusan'];
-          const subgrade = normalized_row['subkelas'] || row['Subkelas'];
-          const nis = String(normalized_row['nis'] || row['NIS']);
-          const academic_year = normalized_row['tahun ajaran'] || row['Tahun Ajaran'];
-
-          // Validate required fields
-          if (!full_name || !grade || !department_name || !nis || !academic_year) {
-            errors.push({
-              index: i,
-              error: 'Missing required fields: Nama Lengkap, Kelas, Jurusan, NIS, Tahun Ajaran'
-            });
-            continue;
-          }
-
-          // Find department by name
-          const [department] = await db
-            .select({ id: departments.id })
-            .from(departments)
-            .where(and(
-              eq(departments.name, department_name),
-              isNull(departments.deleted_at)
-            ))
-            .limit(1);
-
-          if (!department) {
-            errors.push({
-              index: i,
-              nis: nis,
-              error: `Department '${department_name}' not found`
-            });
-            continue;
-          }
-
-          // Find academic year by year
-          const [academic_year_record] = await db
-            .select({ id: academicYears.id })
-            .from(academicYears)
-            .where(and(
-              eq(academicYears.year, academic_year),
-              isNull(academicYears.deleted_at)
-            ))
-            .limit(1);
-            
-          if (!academic_year_record) {
-            errors.push({
-              index: i,
-              nis: nis,
-              error: `Academic year '${academic_year}' not found`
-            });
-            continue;
-          }
-
-          // Find class by grade, subgrade, department, and academic year
-          const class_where_conditions = [
-            eq(classes.grade, grade),
-            eq(classes.id_department, department.id),
-            eq(classes.id_academic_year, academic_year_record.id),
-            isNull(classes.deleted_at)
-          ];
-
-          // Add subgrade condition if provided
-          if (subgrade) {
-            class_where_conditions.push(eq(classes.subgrade, String(subgrade)));
-          } else {
-            class_where_conditions.push(isNull(classes.subgrade));
-          }
-
-          const [class_record] = await db
-            .select({ id: classes.id })
-            .from(classes)
-            .where(and(...class_where_conditions))
-            .limit(1);
-
-          if (!class_record) {
-            errors.push({
-              index: i,
-              nis: nis,
-              error: `Class not found for grade '${grade}', department '${department_name}', subgrade '${subgrade || 'none'}', academic year '${academic_year}'`
-            });
-            continue;
-          }
-
-          // Create processed user object
-          const processed_user = {
-            full_name: full_name,
-            id_role: 4, // Student role
-            data: {
-              nis: nis,
-              id_class: class_record.id
-            }
-          };
-
-          processed_data.push(processed_user);
-
-        } catch (error) {
-          errors.push({
-            index: i,
-            error: `Processing error: ${error.message}`
-          });
-        }
-      }
-
-      // If there are errors, throw with details
-      if (errors.length > 0) {
-        const error_message = `Failed to process ${errors.length} out of ${excelData.length} records`;
-        const error = new Error(error_message);
-        error.details = errors;
-        throw error;
-      }
-
-      return {
-        data: processed_data,
-        status: 200,
-        pagination: null
-      };
-
-    } catch (error) {
-      if (error.details) {
-        // Re-throw errors with details
-        throw error;
-      }
-      throw new Error(`Failed to process Excel data: ${error.message}`);
-    }
+    return this.processExcelData(excelData);
   }
 }

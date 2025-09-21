@@ -25,7 +25,6 @@ export const attendance = mysqlTable('attendance', {
   id_user: int('id_user').notNull().references(() => users.id),
   id_class: int('id_class').references(() => classes.id),
   date: date('date').notNull(),
-  time: time('time').notNull(),
   status: setType('status').notNull().default(['alpha']),
   information: varchar('information', { length: 255 }),
   created_at: timestamp('created_at').defaultNow().notNull(),

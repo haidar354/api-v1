@@ -18,61 +18,57 @@ export class TeachersService {
       const [existing_user] = await db
         .select()
         .from(users)
-        .where(and(
-          eq(users.id, teacherData.id_user),
-          isNull(users.deleted_at)
-        ))
+        .where(and(eq(users.id, teacherData.id_user), isNull(users.deleted_at)))
         .limit(1);
 
       if (!existing_user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Check if NIP already exists (excluding soft deleted)
       const existing_nip = await db
         .select()
         .from(teachers)
-        .where(and(
-          eq(teachers.nip, teacherData.nip),
-          isNull(teachers.deleted_at)
-        ))
+        .where(
+          and(eq(teachers.nip, teacherData.nip), isNull(teachers.deleted_at))
+        )
         .limit(1);
 
       if (existing_nip.length > 0) {
-        throw new Error('NIP already exists');
+        throw new Error("NIP already exists");
       }
 
       // Check if user is already a teacher (excluding soft deleted)
       const existing_teacher = await db
         .select()
         .from(teachers)
-        .where(and(
-          eq(teachers.id_user, teacherData.id_user),
-          isNull(teachers.deleted_at)
-        ))
+        .where(
+          and(
+            eq(teachers.id_user, teacherData.id_user),
+            isNull(teachers.deleted_at)
+          )
+        )
         .limit(1);
 
       if (existing_teacher.length > 0) {
-        throw new Error('User is already registered as a teacher');
+        throw new Error("User is already registered as a teacher");
       }
 
       // Insert new teacher
-      const insert_result = await db
-        .insert(teachers)
-        .values(teacherData);
+      const insert_result = await db.insert(teachers).values(teacherData);
 
       // Get the inserted teacher by ID with relationships
       const id_insert = insert_result[0].insertId;
       const teacher_result = await this.getTeacherById(id_insert);
 
       if (!teacher_result.data) {
-        throw new Error('Failed to retrieve created teacher');
+        throw new Error("Failed to retrieve created teacher");
       }
 
       return {
         data: teacher_result.data,
         status: 201,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       console.log("ERROR: ", error);
@@ -85,15 +81,19 @@ export class TeachersService {
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Teachers list with pagination info
    */
+  // Update method getAllTeachers di teachers.service.js untuk mendukung date filter
+
   static async getAllTeachers(options = {}) {
     try {
       const {
         page = 1,
         limit = 10,
-        search = '',
-        class: class_filter = '',
-        sortBy = 'created_at',
-        sortOrder = 'desc'
+        search = "",
+        class: class_filter = "",
+        sortBy = "created_at",
+        sortOrder = "desc",
+        startDate = null,
+        endDate = null,
       } = options;
 
       const offset = (page - 1) * limit;
@@ -114,10 +114,21 @@ export class TeachersService {
         where_conditions.push(eq(teachers.id_class, parseInt(class_filter)));
       }
 
+      // Add date range filters for export
+      if (startDate && endDate) {
+        where_conditions.push(
+          and(
+            sql`DATE(${teachers.created_at}) >= ${startDate}`,
+            sql`DATE(${teachers.created_at}) <= ${endDate}`
+          )
+        );
+      }
+
       // Build order by
-      const order_by = sortOrder === 'asc'
-        ? asc(teachers[sortBy] || teachers.created_at)
-        : desc(teachers[sortBy] || teachers.created_at);
+      const order_by =
+        sortOrder === "asc"
+          ? asc(teachers[sortBy] || teachers.created_at)
+          : desc(teachers[sortBy] || teachers.created_at);
 
       // Query teachers with relationships
       const teachers_list = await db
@@ -131,12 +142,12 @@ export class TeachersService {
           user: {
             id: users.id,
             full_name: users.full_name,
-            data: users.data
+            data: users.data,
           },
           class: {
             id: classes.id,
-            grade: classes.grade
-          }
+            grade: classes.grade,
+          },
         })
         .from(teachers)
         .leftJoin(users, eq(teachers.id_user, users.id))
@@ -165,7 +176,7 @@ export class TeachersService {
           items_per_page: limit,
           has_next_page: page < total_pages,
           has_prev_page: page > 1,
-        }
+        },
       };
     } catch (error) {
       throw new Error(`Failed to get teachers: ${error.message}`);
@@ -190,26 +201,23 @@ export class TeachersService {
           user: {
             id: users.id,
             full_name: users.full_name,
-            data: users.data
+            data: users.data,
           },
           class: {
             id: classes.id,
-            grade: classes.grade
-          }
+            grade: classes.grade,
+          },
         })
         .from(teachers)
         .leftJoin(users, eq(teachers.id_user, users.id))
         .leftJoin(classes, eq(teachers.id_class, classes.id))
-        .where(and(
-          eq(teachers.id, teacherId),
-          isNull(teachers.deleted_at)
-        ))
+        .where(and(eq(teachers.id, teacherId), isNull(teachers.deleted_at)))
         .limit(1);
 
       return {
         data: teacher || null,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to get teacher: ${error.message}`);
@@ -227,7 +235,7 @@ export class TeachersService {
       // Check if teacher exists and not soft deleted
       const existing_teacher_result = await this.getTeacherById(teacherId);
       if (!existing_teacher_result.data) {
-        throw new Error('Teacher not found');
+        throw new Error("Teacher not found");
       }
 
       // If user ID is being updated, check if user exists
@@ -235,29 +243,30 @@ export class TeachersService {
         const [existing_user] = await db
           .select()
           .from(users)
-          .where(and(
-            eq(users.id, updateData.id_user),
-            isNull(users.deleted_at)
-          ))
+          .where(
+            and(eq(users.id, updateData.id_user), isNull(users.deleted_at))
+          )
           .limit(1);
 
         if (!existing_user) {
-          throw new Error('User not found');
+          throw new Error("User not found");
         }
 
         // Check if user is already a teacher (excluding current teacher)
         const existing_user_teacher = await db
           .select()
           .from(teachers)
-          .where(and(
-            eq(teachers.id_user, updateData.id_user),
-            isNull(teachers.deleted_at),
-            ne(teachers.id, teacherId)
-          ))
+          .where(
+            and(
+              eq(teachers.id_user, updateData.id_user),
+              isNull(teachers.deleted_at),
+              ne(teachers.id, teacherId)
+            )
+          )
           .limit(1);
 
         if (existing_user_teacher.length > 0) {
-          throw new Error('User is already registered as a teacher');
+          throw new Error("User is already registered as a teacher");
         }
       }
 
@@ -266,31 +275,35 @@ export class TeachersService {
         const [existing_class] = await db
           .select()
           .from(classes)
-          .where(and(
-            eq(classes.id, updateData.id_class),
-            isNull(classes.deleted_at)
-          ))
+          .where(
+            and(eq(classes.id, updateData.id_class), isNull(classes.deleted_at))
+          )
           .limit(1);
 
         if (!existing_class) {
-          throw new Error('Class not found');
+          throw new Error("Class not found");
         }
       }
 
       // If NIP is being updated, check for duplicates
-      if (updateData.nip && updateData.nip !== existing_teacher_result.data.nip) {
+      if (
+        updateData.nip &&
+        updateData.nip !== existing_teacher_result.data.nip
+      ) {
         const existing_nip = await db
           .select()
           .from(teachers)
-          .where(and(
-            eq(teachers.nip, updateData.nip),
-            isNull(teachers.deleted_at),
-            ne(teachers.id, teacherId)
-          ))
+          .where(
+            and(
+              eq(teachers.nip, updateData.nip),
+              isNull(teachers.deleted_at),
+              ne(teachers.id, teacherId)
+            )
+          )
           .limit(1);
 
         if (existing_nip.length > 0) {
-          throw new Error('NIP already exists');
+          throw new Error("NIP already exists");
         }
       }
 
@@ -304,13 +317,13 @@ export class TeachersService {
       const updated_teacher_result = await this.getTeacherById(teacherId);
 
       if (!updated_teacher_result.data) {
-        throw new Error('Failed to update teacher');
+        throw new Error("Failed to update teacher");
       }
 
       return {
         data: updated_teacher_result.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to update teacher: ${error.message}`);
@@ -327,7 +340,7 @@ export class TeachersService {
       // Check if teacher exists and not already soft deleted
       const existing_teacher_result = await this.getTeacherById(teacherId);
       if (!existing_teacher_result.data) {
-        throw new Error('Teacher not found');
+        throw new Error("Teacher not found");
       }
 
       // Soft delete by setting deleted_at timestamp
@@ -342,7 +355,7 @@ export class TeachersService {
       return {
         data: success,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to delete teacher: ${error.message}`);
@@ -364,41 +377,47 @@ export class TeachersService {
         .limit(1);
 
       if (!existing_teacher) {
-        throw new Error('Teacher not found');
+        throw new Error("Teacher not found");
       }
 
       if (!existing_teacher.deleted_at) {
-        throw new Error('Teacher is not deleted');
+        throw new Error("Teacher is not deleted");
       }
 
       // Check if NIP would conflict after restore
       const existing_nip = await db
         .select()
         .from(teachers)
-        .where(and(
-          eq(teachers.nip, existing_teacher.nip),
-          isNull(teachers.deleted_at),
-          ne(teachers.id, teacherId)
-        ))
+        .where(
+          and(
+            eq(teachers.nip, existing_teacher.nip),
+            isNull(teachers.deleted_at),
+            ne(teachers.id, teacherId)
+          )
+        )
         .limit(1);
 
       if (existing_nip.length > 0) {
-        throw new Error('Cannot restore: NIP already exists');
+        throw new Error("Cannot restore: NIP already exists");
       }
 
       // Check if user would conflict after restore
       const existing_user_teacher = await db
         .select()
         .from(teachers)
-        .where(and(
-          eq(teachers.id_user, existing_teacher.id_user),
-          isNull(teachers.deleted_at),
-          ne(teachers.id, teacherId)
-        ))
+        .where(
+          and(
+            eq(teachers.id_user, existing_teacher.id_user),
+            isNull(teachers.deleted_at),
+            ne(teachers.id, teacherId)
+          )
+        )
         .limit(1);
 
       if (existing_user_teacher.length > 0) {
-        throw new Error('Cannot restore: User is already registered as a teacher');
+        throw new Error(
+          "Cannot restore: User is already registered as a teacher"
+        );
       }
 
       // Restore teacher by setting deleted_at to null
@@ -411,13 +430,13 @@ export class TeachersService {
       const restored_teacher_result = await this.getTeacherById(teacherId);
 
       if (!restored_teacher_result.data) {
-        throw new Error('Failed to restore teacher');
+        throw new Error("Failed to restore teacher");
       }
 
       return {
         data: restored_teacher_result.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Failed to restore teacher: ${error.message}`);
@@ -444,10 +463,12 @@ export class TeachersService {
       return {
         data: class_stats,
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
-      throw new Error(`Failed to get teachers count by class: ${error.message}`);
+      throw new Error(
+        `Failed to get teachers count by class: ${error.message}`
+      );
     }
   }
 
@@ -468,15 +489,15 @@ export class TeachersService {
 
       return {
         data: {
-          status: 'healthy',
+          status: "healthy",
           timestamp: new Date().toISOString(),
           statistics: {
             total_teachers,
-            classes_with_teachers: class_stats.data.length
-          }
+            classes_with_teachers: class_stats.data.length,
+          },
         },
         status: 200,
-        pagination: null
+        pagination: null,
       };
     } catch (error) {
       throw new Error(`Teachers service health check failed: ${error.message}`);
@@ -496,27 +517,29 @@ export class TeachersService {
       for (let i = 0; i < excelData.length; i++) {
         try {
           const row = excelData[i];
-          
+
           // Normalize keys to handle case-insensitive matching
           const normalized_row = {};
-          Object.keys(row).forEach(key => {
+          Object.keys(row).forEach((key) => {
             const normalized_key = key.toLowerCase().trim();
             normalized_row[normalized_key] = row[key];
           });
 
           // Extract data with case-insensitive key matching
-          const full_name = normalized_row['nama lengkap'] || row['Nama Lengkap'];
-          const grade = normalized_row['kelas'] || row['Kelas'];
-          const department_name = normalized_row['jurusan'] || row['Jurusan'];
-          const subgrade = normalized_row['subkelas'] || row['Subkelas'];
-          const nip = String(normalized_row['nip'] || row['NIP']);
-          const academic_year = normalized_row['tahun ajaran'] || row['Tahun Ajaran'];
+          const full_name =
+            normalized_row["nama lengkap"] || row["Nama Lengkap"];
+          const grade = normalized_row["kelas"] || row["Kelas"];
+          const department_name = normalized_row["jurusan"] || row["Jurusan"];
+          const subgrade = normalized_row["subkelas"] || row["Subkelas"];
+          const nip = String(normalized_row["nip"] || row["NIP"]);
+          const academic_year =
+            normalized_row["tahun ajaran"] || row["Tahun Ajaran"];
 
           // Validate required fields (only full_name and nip are required)
           if (!full_name || !nip) {
             errors.push({
               index: i,
-              error: 'Missing required fields: Nama Lengkap, NIP'
+              error: "Missing required fields: Nama Lengkap, NIP",
             });
             continue;
           }
@@ -532,19 +555,21 @@ export class TeachersService {
             } else {
               // Find department by name
               const [department] = await db
-                .select({ id: departments.id })
+                .select({ id: departments.id , short_name: departments.short_name })
                 .from(departments)
-                .where(and(
-                  eq(departments.name, department_name),
-                  isNull(departments.deleted_at)
-                ))
+                .where(
+                  and(
+                    eq(departments.short_name, department_name),
+                    isNull(departments.deleted_at)
+                  )
+                )
                 .limit(1);
 
               if (!department) {
                 errors.push({
                   index: i,
                   nip: nip,
-                  error: `Department '${department_name}' not found`
+                  error: `Department '${department_name}' not found`,
                 });
                 continue;
               }
@@ -553,17 +578,19 @@ export class TeachersService {
               const [academic_year_record] = await db
                 .select({ id: academicYears.id })
                 .from(academicYears)
-                .where(and(
-                  eq(academicYears.year, academic_year),
-                  isNull(academicYears.deleted_at)
-                ))
+                .where(
+                  and(
+                    eq(academicYears.year, academic_year),
+                    isNull(academicYears.deleted_at)
+                  )
+                )
                 .limit(1);
 
               if (!academic_year_record) {
                 errors.push({
                   index: i,
                   nip: nip,
-                  error: `Academic year '${academic_year}' not found`
+                  error: `Academic year '${academic_year}' not found`,
                 });
                 continue;
               }
@@ -573,12 +600,14 @@ export class TeachersService {
                 eq(classes.grade, grade),
                 eq(classes.id_department, department.id),
                 eq(classes.id_academic_year, academic_year_record.id),
-                isNull(classes.deleted_at)
+                isNull(classes.deleted_at),
               ];
 
               // Add subgrade condition if provided
               if (subgrade) {
-                class_where_conditions.push(eq(classes.subgrade, String(subgrade)));
+                class_where_conditions.push(
+                  eq(classes.subgrade, String(subgrade))
+                );
               } else {
                 class_where_conditions.push(isNull(classes.subgrade));
               }
@@ -593,7 +622,9 @@ export class TeachersService {
                 errors.push({
                   index: i,
                   nip: nip,
-                  error: `Class not found for grade '${grade}', department '${department_name}', subgrade '${subgrade || 'none'}', academic year '${academic_year}'`
+                  error: `Class not found for grade '${grade}', department '${department_name}', subgrade '${
+                    subgrade || "none"
+                  }', academic year '${academic_year}'`,
                 });
                 continue;
               }
@@ -608,16 +639,15 @@ export class TeachersService {
             id_role: 3, // Teacher role
             data: {
               nip: nip,
-              id_class: id_class
-            }
+              id_class: id_class,
+            },
           };
 
           processed_data.push(processed_user);
-
         } catch (error) {
           errors.push({
             index: i,
-            error: `Processing error: ${error.message}`
+            error: `Processing error: ${error.message}`,
           });
         }
       }
@@ -633,9 +663,8 @@ export class TeachersService {
       return {
         data: processed_data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
       if (error.details) {
         // Re-throw errors with details

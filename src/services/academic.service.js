@@ -260,10 +260,31 @@ export class AcademicService {
 
   static async getAllPrincipalAgendas(options = {}) {
     try {
-      const { page = 1, limit = 10, start_date, end_date, search } = options;
-      const offset = (page - 1) * limit;
+      const {
+        page = 1,
+        limit = 10,
+        start_date,
+        end_date,
+        search,
+        count = false,
+        month = false,
+        monthSet,
+        year = false,
+        yearSet,
+        statistics_month = false,
+      } = options;
+
+      // Debug: Log parameter statistics_month
+      console.log("=== DEBUG: statistics_month parameter ===");
+      console.log(
+        "statistics_month:",
+        statistics_month,
+        typeof statistics_month
+      );
+
       const where_conditions = [isNull(principalAgendas.deleted_at)];
 
+      // Filter berdasarkan start_date dan end_date
       if (start_date)
         where_conditions.push(
           gte(principalAgendas.event_date, new Date(start_date))
@@ -272,6 +293,29 @@ export class AcademicService {
         where_conditions.push(
           lte(principalAgendas.event_date, new Date(end_date + "T23:59:59"))
         );
+
+      // Filter berdasarkan bulan (untuk data pagination, bukan count)
+      if (month && monthSet && !statistics_month) {
+        const monthNumber = parseInt(monthSet);
+
+        if (monthNumber >= 1 && monthNumber <= 12) {
+          where_conditions.push(
+            sql`EXTRACT(MONTH FROM ${principalAgendas.event_date}) = ${monthNumber}`
+          );
+        }
+      }
+
+      // Filter berdasarkan tahun (untuk data pagination, bukan count)
+      if (year && yearSet && !statistics_month) {
+        const yearNumber = parseInt(yearSet);
+        if (yearNumber > 0) {
+          where_conditions.push(
+            sql`EXTRACT(YEAR FROM ${principalAgendas.event_date}) = ${yearNumber}`
+          );
+        }
+      }
+
+      // Filter berdasarkan search
       if (search)
         where_conditions.push(
           or(
@@ -280,6 +324,148 @@ export class AcademicService {
           )
         );
 
+      // Jika request untuk statistics_month
+      if (statistics_month === true) {
+        console.log("=== Processing monthly statistics ===");
+
+        let statisticsQuery;
+
+        // Jika ada filter tahun, hitung statistik untuk tahun tersebut
+        if (year === true && yearSet) {
+          const yearNumber = parseInt(yearSet);
+          console.log("Getting statistics for year:", yearNumber);
+
+          statisticsQuery = await db.execute(sql`
+          SELECT 
+            LPAD(MONTH(event_date), 2, '0') as month_key,
+            COUNT(*) as count
+          FROM principal_agendas 
+          WHERE deleted_at IS NULL 
+          AND YEAR(event_date) = ${yearNumber}
+          GROUP BY MONTH(event_date)
+          ORDER BY MONTH(event_date)
+        `);
+        } else {
+          // Jika tidak ada filter tahun, gunakan tahun sekarang
+          const currentYear = new Date().getFullYear();
+          console.log("Getting statistics for current year:", currentYear);
+
+          statisticsQuery = await db.execute(sql`
+          SELECT 
+            LPAD(MONTH(event_date), 2, '0') as month_key,
+            COUNT(*) as count
+          FROM principal_agendas 
+          WHERE deleted_at IS NULL 
+          AND YEAR(event_date) = ${currentYear}
+          GROUP BY MONTH(event_date)
+          ORDER BY MONTH(event_date)
+        `);
+        }
+
+        console.log("Statistics query result:", statisticsQuery);
+
+        // Format hasil menjadi object dengan key bulan
+        const monthlyStats = {};
+
+        // Inisialisasi semua bulan dengan 0
+        for (let i = 1; i <= 12; i++) {
+          const monthKey = i.toString().padStart(2, "0");
+          monthlyStats[monthKey] = 0;
+        }
+
+        // Isi data dari query result
+        if (
+          statisticsQuery &&
+          statisticsQuery[0] &&
+          statisticsQuery[0].length > 0
+        ) {
+          statisticsQuery[0].forEach((row) => {
+            monthlyStats[row.month_key] = parseInt(row.count);
+          });
+        }
+
+        console.log("Final monthly statistics:", monthlyStats);
+
+        return {
+          data: monthlyStats,
+          status: 200,
+          message: "Monthly statistics retrieved successfully",
+        };
+      }
+
+      // Debug: Log final where conditions
+      console.log("=== DEBUG: Final where conditions count ===");
+      console.log("Number of where conditions:", where_conditions.length);
+
+      // Debug: Test the actual query
+      const debugCount = await db
+        .select({ count: sql`count(*)` })
+        .from(principalAgendas)
+        .where(and(...where_conditions));
+      console.log("Debug count result:", debugCount);
+
+      // Jika hanya ingin menghitung jumlah data
+      if (count) {
+        let totalCount;
+
+        // Jika ada filter bulan atau tahun, gunakan raw query yang lebih reliable
+        if (month && monthSet) {
+          const monthNumber = parseInt(monthSet);
+          if (monthNumber >= 1 && monthNumber <= 12) {
+            let rawQuery;
+
+            // Jika ada filter tahun juga
+            if (year && yearSet) {
+              const yearNumber = parseInt(yearSet);
+              rawQuery = await db.execute(sql`
+            SELECT COUNT(*) as total_count
+            FROM principal_agendas 
+            WHERE deleted_at IS NULL 
+            AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
+            AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
+          `);
+            } else {
+              // Hanya filter bulan
+              rawQuery = await db.execute(sql`
+            SELECT COUNT(*) as total_count
+            FROM principal_agendas 
+            WHERE deleted_at IS NULL 
+            AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
+          `);
+            }
+
+            console.log("Raw query result:", rawQuery);
+            totalCount = rawQuery[0][0].total_count;
+          }
+        } else if (year && yearSet) {
+          // Hanya filter tahun
+          const yearNumber = parseInt(yearSet);
+          const rawQuery = await db.execute(sql`
+        SELECT COUNT(*) as total_count
+        FROM principal_agendas 
+        WHERE deleted_at IS NULL 
+        AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
+      `);
+          totalCount = rawQuery[0][0].total_count;
+        } else {
+          // Tidak ada filter bulan/tahun, gunakan Drizzle ORM biasa
+          const [{ count: countResult }] = await db
+            .select({ count: sql`count(*)` })
+            .from(principalAgendas)
+            .where(and(...where_conditions));
+          totalCount = countResult;
+        }
+
+        return {
+          count: totalCount,
+          status: 200,
+          message: "Total count retrieved successfully",
+        };
+      }
+
+      // Jika tidak hanya count, ambil data dengan pagination
+      const offset = (page - 1) * limit;
+
       const agendas_list = await db
         .select()
         .from(principalAgendas)
@@ -287,11 +473,13 @@ export class AcademicService {
         .orderBy(asc(principalAgendas.event_date))
         .limit(limit)
         .offset(offset);
-      const [{ count }] = await db
+
+      const [{ count: totalCount }] = await db
         .select({ count: sql`count(*)` })
         .from(principalAgendas)
         .where(and(...where_conditions));
-      const total_pages = Math.ceil(count / limit);
+
+      const total_pages = Math.ceil(totalCount / limit);
 
       return {
         data: agendas_list,
@@ -299,7 +487,7 @@ export class AcademicService {
         pagination: {
           current_page: page,
           total_pages,
-          total_items: count,
+          total_items: totalCount,
           items_per_page: limit,
           has_next_page: page < total_pages,
           has_prev_page: page > 1,
@@ -1649,13 +1837,21 @@ export class AcademicService {
         search,
         start_date,
         end_date,
+        count = false,
+        month = false,
+        monthSet,
+        year = false,
+        yearSet,
+        statistics_month = false,
       } = options;
-      const offset = (page - 1) * limit;
+
       const where_conditions = [isNull(letters.deleted_at)];
 
+      // Base filters
       if (id_user) where_conditions.push(eq(letters.id_user, id_user));
       if (letter_type)
         where_conditions.push(eq(letters.letter_type, letter_type));
+
       if (search) {
         where_conditions.push(
           or(
@@ -1666,6 +1862,8 @@ export class AcademicService {
           )
         );
       }
+
+      // Date filters
       if (start_date) {
         where_conditions.push(
           or(
@@ -1682,6 +1880,92 @@ export class AcademicService {
           )
         );
       }
+
+      // Month filter
+      if (month && monthSet) {
+        const monthNumber = parseInt(monthSet, 10);
+        where_conditions.push(
+          or(
+            sql`EXTRACT(MONTH FROM ${letters.date_received}) = ${monthNumber}`,
+            sql`EXTRACT(MONTH FROM ${letters.date_sent}) = ${monthNumber}`
+          )
+        );
+      }
+
+      // Year filter
+      if (year && yearSet) {
+        const yearNumber = parseInt(yearSet, 10);
+        where_conditions.push(
+          or(
+            sql`EXTRACT(YEAR FROM ${letters.date_received}) = ${yearNumber}`,
+            sql`EXTRACT(YEAR FROM ${letters.date_sent}) = ${yearNumber}`
+          )
+        );
+      }
+
+      // If statistics_month is requested
+      if (statistics_month) {
+        let statsQuery = db
+          .select({
+            month: sql`EXTRACT(MONTH FROM COALESCE(${letters.date_received}, ${letters.date_sent}))`,
+            count: sql`count(*)`,
+          })
+          .from(letters)
+          .where(and(...where_conditions))
+          .groupBy(
+            sql`EXTRACT(MONTH FROM COALESCE(${letters.date_received}, ${letters.date_sent}))`
+          )
+          .orderBy(
+            sql`EXTRACT(MONTH FROM COALESCE(${letters.date_received}, ${letters.date_sent}))`
+          );
+
+        const monthlyStats = await statsQuery;
+
+        // Initialize all months with 0
+        const result = {
+          "01": 0,
+          "02": 0,
+          "03": 0,
+          "04": 0,
+          "05": 0,
+          "06": 0,
+          "07": 0,
+          "08": 0,
+          "09": 0,
+          10: 0,
+          11: 0,
+          12: 0,
+        };
+
+        // Fill in actual counts
+        monthlyStats.forEach((stat) => {
+          const monthKey = stat.month.toString().padStart(2, "0");
+          result[monthKey] = stat.count;
+        });
+
+        return {
+          data: result,
+          status: 200,
+          pagination: null,
+        };
+      }
+
+      // If only count is requested
+      if (count) {
+        const [{ total }] = await db
+          .select({ total: sql`count(*)` })
+          .from(letters)
+          .where(and(...where_conditions));
+
+        return {
+          data: { count: total },
+          status: 200,
+          pagination: null,
+        };
+      }
+
+      // Regular query with pagination
+      const offset = (page - 1) * limit;
 
       const letters_list = await db
         .select({
@@ -1707,11 +1991,12 @@ export class AcademicService {
         .limit(limit)
         .offset(offset);
 
-      const [{ count }] = await db
-        .select({ count: sql`count(*)` })
+      const [{ total }] = await db
+        .select({ total: sql`count(*)` })
         .from(letters)
         .where(and(...where_conditions));
-      const total_pages = Math.ceil(count / limit);
+
+      const total_pages = Math.ceil(total / limit);
 
       return {
         data: letters_list,
@@ -1719,7 +2004,7 @@ export class AcademicService {
         pagination: {
           current_page: page,
           total_pages,
-          total_items: count,
+          total_items: total,
           items_per_page: limit,
           has_next_page: page < total_pages,
           has_prev_page: page > 1,

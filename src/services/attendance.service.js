@@ -13,7 +13,6 @@ import { teachers } from '../models/teachers.model.js';
  * Handles business logic for attendance and guest management
  */
 class AttendanceService {
-
   // ==================== HEALTH CHECK ====================
 
   /**
@@ -34,24 +33,25 @@ class AttendanceService {
         .where(isNull(guests.deleted_at));
 
       const health_data = {
-        service: 'attendance',
-        status: 'healthy',
+        service: "attendance",
+        status: "healthy",
         timestamp: new Date().toISOString(),
         statistics: {
           total_attendance_records: attendance_result.count,
-          total_guest_records: guests_result.count
-        }
+          total_guest_records: guests_result.count,
+        },
       };
 
       return {
         data: health_data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Attendance service health check error:', error);
-      throw new Error(`Attendance service health check failed: ${error.message}`);
+      console.error("Attendance service health check error:", error);
+      throw new Error(
+        `Attendance service health check failed: ${error.message}`
+      );
     }
   }
 
@@ -64,8 +64,9 @@ class AttendanceService {
    */
   static async createAttendance(attendance_data) {
     try {
-      const { id_user, id_class, id_role, date, time, status, information } = attendance_data;
-      
+      const { id_user, id_class, id_role, date, status, information } =
+        attendance_data;
+
       // Verify user exists
       const existing_user = await db
         .select()
@@ -74,7 +75,7 @@ class AttendanceService {
         .limit(1);
 
       if (existing_user.length === 0) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Verify role exists if provided
@@ -86,22 +87,20 @@ class AttendanceService {
           .limit(1);
 
         if (existing_role.length === 0) {
-          throw new Error('Role not found');
+          throw new Error("Role not found");
         }
       }
 
       // Create attendance record
-      const insert_result = await db
-        .insert(attendance)
-        .values({
-          id_user,
-          id_role: id_role || existing_user[0].id_role,
-          id_class: id_class || existing_user[0].data.id_class,
-          date,
-          time,
-          status: Array.isArray(status) ? status : [status],
-          information: information || null
-        });
+      const insert_result = await db.insert(attendance).values({
+        id_user,
+        id_role: id_role || existing_user[0].id_role,
+        id_class: id_class || existing_user[0].data.id_class,
+        date,
+        // time,
+        status: Array.isArray(status) ? status : [status],
+        information: information || null,
+      });
 
       // Get the inserted attendance by ID
       const inserted_id = insert_result[0].insertId;
@@ -110,12 +109,11 @@ class AttendanceService {
       return {
         data: created_attendance.data,
         status: 201,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Create attendance error:', error);
-      throw new Error(error.message || 'Failed to create attendance record');
+      console.error("Create attendance error:", error);
+      throw new Error(error.message || "Failed to create attendance record");
     }
   }
 
@@ -133,42 +131,36 @@ class AttendanceService {
           id_role: attendance.id_role,
           id_class: attendance.id_class,
           date: attendance.date,
-          time: attendance.time,
+          // time: attendance.time,
           status: attendance.status,
           information: attendance.information,
           created_at: attendance.created_at,
           updated_at: attendance.updated_at,
           user: {
-            full_name: users.full_name
+            full_name: users.full_name,
           },
           role: {
-            name: roles.name
+            name: roles.name,
           },
         })
         .from(attendance)
         .leftJoin(users, eq(attendance.id_user, users.id))
         .leftJoin(roles, eq(attendance.id_role, roles.id))
-        .where(
-          and(
-            eq(attendance.id, id),
-            isNull(attendance.deleted_at)
-          )
-        )
+        .where(and(eq(attendance.id, id), isNull(attendance.deleted_at)))
         .limit(1);
 
       if (attendance_result.length === 0) {
-        throw new Error('Attendance record not found');
+        throw new Error("Attendance record not found");
       }
 
       return {
         data: attendance_result[0],
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Get attendance by ID error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance record');
+      console.error("Get attendance by ID error:", error);
+      throw new Error(error.message || "Failed to fetch attendance record");
     }
   }
 
@@ -188,7 +180,7 @@ class AttendanceService {
         status,
         full_name,
         page = 1,
-        limit = 10
+        limit = 10,
       } = filters;
 
       const offset = (page - 1) * limit;
@@ -230,6 +222,8 @@ class AttendanceService {
         .leftJoin(roles, eq(attendance.id_role, roles.id))
         .where(and(...where_conditions));
 
+        console.log(total_result);
+
       const total = total_result.count;
 
       // Get paginated results
@@ -240,7 +234,7 @@ class AttendanceService {
           id_role: attendance.id_role,
           id_class: attendance.id_class,
           date: attendance.date,
-          time: attendance.time,
+          // time: attendance.time,
           status: attendance.status,
           information: attendance.information,
           created_at: attendance.created_at,
@@ -249,7 +243,7 @@ class AttendanceService {
             full_name: users.full_name,
           },
           role: {
-            name: roles.name
+            name: roles.name,
           },
         })
         .from(attendance)
@@ -267,13 +261,12 @@ class AttendanceService {
           page,
           limit,
           total,
-          total_pages: Math.ceil(total / limit)
-        }
+          total_pages: Math.ceil(total / limit),
+        },
       };
-
     } catch (error) {
-      console.error('Get attendances error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance records');
+      console.error("Get attendances error:", error);
+      throw new Error(error.message || "Failed to fetch attendance records");
     }
   }
 
@@ -297,7 +290,7 @@ class AttendanceService {
           .limit(1);
 
         if (existing_role.length === 0) {
-          throw new Error('Role not found');
+          throw new Error("Role not found");
         }
       }
 
@@ -306,7 +299,11 @@ class AttendanceService {
         .update(attendance)
         .set({
           ...update_data,
-          status: update_data.status ? (Array.isArray(update_data.status) ? update_data.status : [update_data.status]) : undefined
+          status: update_data.status
+            ? Array.isArray(update_data.status)
+              ? update_data.status
+              : [update_data.status]
+            : undefined,
         })
         .where(eq(attendance.id, id));
 
@@ -316,12 +313,11 @@ class AttendanceService {
       return {
         data: updated_attendance.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Update attendance error:', error);
-      throw new Error(error.message || 'Failed to update attendance record');
+      console.error("Update attendance error:", error);
+      throw new Error(error.message || "Failed to update attendance record");
     }
   }
 
@@ -343,15 +339,14 @@ class AttendanceService {
 
       return {
         data: {
-          message: 'Attendance record deleted successfully'
+          message: "Attendance record deleted successfully",
         },
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Delete attendance error:', error);
-      throw new Error(error.message || 'Failed to delete attendance record');
+      console.error("Delete attendance error:", error);
+      throw new Error(error.message || "Failed to delete attendance record");
     }
   }
 
@@ -370,11 +365,11 @@ class AttendanceService {
         .limit(1);
 
       if (existing_attendance.length === 0) {
-        throw new Error('Attendance record not found');
+        throw new Error("Attendance record not found");
       }
 
       if (!existing_attendance[0].deleted_at) {
-        throw new Error('Attendance record is not deleted');
+        throw new Error("Attendance record is not deleted");
       }
 
       // Restore attendance record
@@ -389,12 +384,11 @@ class AttendanceService {
       return {
         data: restored_attendance.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Restore attendance error:', error);
-      throw new Error(error.message || 'Failed to restore attendance record');
+      console.error("Restore attendance error:", error);
+      throw new Error(error.message || "Failed to restore attendance record");
     }
   }
 
@@ -412,7 +406,10 @@ class AttendanceService {
       let signature_path = null;
 
       if (signature_file) {
-        signature_path = await uploadService.saveFile(signature_file, 'signatures');
+        signature_path = await uploadService.saveFile(
+          signature_file,
+          "signatures"
+        );
       }
 
       // Insert guest record
@@ -421,7 +418,7 @@ class AttendanceService {
         address,
         purpose,
         visit_date: new Date(),
-        signature: signature_path
+        signature: signature_path,
       });
 
       // Get the inserted ID from MySQL
@@ -433,12 +430,11 @@ class AttendanceService {
       return {
         data: created_guest.data,
         status: 201,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Create guest error:', error);
-      throw new Error(error.message || 'Failed to create guest record');
+      console.error("Create guest error:", error);
+      throw new Error(error.message || "Failed to create guest record");
     }
   }
 
@@ -452,27 +448,21 @@ class AttendanceService {
       const guest_result = await db
         .select()
         .from(guests)
-        .where(
-          and(
-            eq(guests.id, id),
-            isNull(guests.deleted_at)
-          )
-        )
+        .where(and(eq(guests.id, id), isNull(guests.deleted_at)))
         .limit(1);
 
       if (guest_result.length === 0) {
-        throw new Error('Guest record not found');
+        throw new Error("Guest record not found");
       }
 
       return {
         data: guest_result[0],
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Get guest by ID error:', error);
-      throw new Error(error.message || 'Failed to fetch guest record');
+      console.error("Get guest by ID error:", error);
+      throw new Error(error.message || "Failed to fetch guest record");
     }
   }
 
@@ -481,6 +471,29 @@ class AttendanceService {
    * @param {Object} filters - Query filters
    * @returns {Promise<Object>} Paginated guest records
    */
+  // Controller method
+  static async getGuests(c) {
+    try {
+      // Get validated query parameters from middleware
+      const filters = c.req.valid("query");
+
+      // Fetch guest records
+      const result = await attendanceService.getAllGuests(filters);
+
+      return jsonResponse(result.data, result.status);
+    } catch (error) {
+      console.error("Get guests error:", error);
+      return errorResponse(
+        error.message || "Failed to fetch guest records",
+        500
+      );
+    }
+  }
+
+  // Make sure to import count from drizzle at the top of your file
+  // import { count, and, gte, lte, like, desc, isNull } from 'drizzle-orm';
+
+  // Service method
   static async getAllGuests(filters = {}) {
     try {
       const {
@@ -488,13 +501,26 @@ class AttendanceService {
         end_date,
         search,
         page = 1,
-        limit = 10
+        limit = 10,
+        count,
+        month,
+        monthSet,
+        year,
+        yearSet,
+        statistics_month,
       } = filters;
 
-      const offset = (page - 1) * limit;
+      const isCountOnly = count === "true" || count === true || count === "1";
+      const isMonthFilter = month === "true" || month === true || month === "1";
+      const isYearFilter = year === "true" || year === true || year === "1";
+      const isMonthlyBreakdown =
+        statistics_month === "true" ||
+        statistics_month === true ||
+        statistics_month === "1";
+
       let where_conditions = [isNull(guests.deleted_at)];
 
-      // Apply filters
+      // Apply existing filters
       if (start_date) {
         where_conditions.push(gte(guests.visit_date, new Date(start_date)));
       }
@@ -506,18 +532,124 @@ class AttendanceService {
       }
 
       if (search) {
-        where_conditions.push(
-          like(guests.full_name, `%${search}%`)
-        );
+        where_conditions.push(like(guests.full_name, `%${search}%`));
       }
 
-      // Get total count
+      // Handle monthly breakdown case
+      if (isCountOnly && isMonthFilter && isMonthlyBreakdown) {
+        const targetMonth = monthSet
+          ? parseInt(monthSet)
+          : new Date().getMonth() + 1;
+        const targetYear = yearSet
+          ? parseInt(yearSet)
+          : new Date().getFullYear();
+
+        // Validate month (1-12)
+        if (targetMonth < 1 || targetMonth > 12) {
+          throw new Error("Invalid month. Month must be between 1 and 12.");
+        }
+
+        const monthlyData = {};
+
+        // Loop through months from January to the specified month
+        for (
+          let currentMonth = 1;
+          currentMonth <= targetMonth;
+          currentMonth++
+        ) {
+          const monthStart = new Date(targetYear, currentMonth - 1, 1);
+          const monthEnd = new Date(
+            targetYear,
+            currentMonth,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
+
+          // Create conditions for this specific month
+          const monthConditions = [
+            ...where_conditions,
+            gte(guests.visit_date, monthStart),
+            lte(guests.visit_date, monthEnd),
+          ];
+
+          const [monthResult] = await db
+            .select({ total: sql`count(*)` })
+            .from(guests)
+            .where(and(...monthConditions));
+
+          // Format month as two digits (01, 02, etc.)
+          const monthKey = currentMonth.toString().padStart(2, "0");
+          monthlyData[monthKey] = monthResult.total;
+        }
+
+        return {
+          data: monthlyData,
+          status: 200,
+        };
+      }
+
+      // Apply month filter (existing logic)
+      if (isMonthFilter && !isMonthlyBreakdown) {
+        const targetMonth = monthSet
+          ? parseInt(monthSet)
+          : new Date().getMonth() + 1;
+        const targetYear = yearSet
+          ? parseInt(yearSet)
+          : new Date().getFullYear();
+
+        // First day of the month
+        const monthStart = new Date(targetYear, targetMonth - 1, 1);
+        // Last day of the month
+        const monthEnd = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+
+        where_conditions.push(gte(guests.visit_date, monthStart));
+        where_conditions.push(lte(guests.visit_date, monthEnd));
+
+      }
+
+      // Apply year filter (only if month filter is not already applied)
+      if (isYearFilter && !isMonthFilter) {
+        const targetYear = yearSet
+          ? parseInt(yearSet)
+          : new Date().getFullYear(); // Default to current year
+
+        // First day of the year
+        const yearStart = new Date(targetYear, 0, 1);
+        // Last day of the year
+        const yearEnd = new Date(targetYear, 11, 31, 23, 59, 59, 999);
+
+        where_conditions.push(gte(guests.visit_date, yearStart));
+        where_conditions.push(lte(guests.visit_date, yearEnd));
+      }
+
+      // If only count is requested (existing logic)
+      if (isCountOnly && !isMonthlyBreakdown) {
+        const [count_result] = await db
+          .select({ total: sql`count(*)` })
+          .from(guests)
+          .where(and(...where_conditions));
+
+        return {
+          data: {
+            count: count_result.total,
+          },
+          status: 200,
+        };
+      }
+
+      // Default behavior: Get total count and paginated results
+      const offset = (page - 1) * limit;
+
+      // Get total count - use sql template for count
       const [total_result] = await db
-        .select({ count: count() })
+        .select({ total: sql`count(*)` })
         .from(guests)
         .where(and(...where_conditions));
 
-      const total = total_result.count;
+      const total = total_result.total;
 
       // Get paginated results
       const guest_results = await db
@@ -527,7 +659,16 @@ class AttendanceService {
         .orderBy(desc(guests.visit_date), desc(guests.created_at))
         .limit(limit)
         .offset(offset);
-
+      console.log({
+        data: guest_results,
+        status: 200,
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit),
+        },
+      });
       return {
         data: guest_results,
         status: 200,
@@ -535,13 +676,12 @@ class AttendanceService {
           page,
           limit,
           total,
-          total_pages: Math.ceil(total / limit)
-        }
+          total_pages: Math.ceil(total / limit),
+        },
       };
-
     } catch (error) {
-      console.error('Get guests error:', error);
-      throw new Error(error.message || 'Failed to fetch guest records');
+      console.error("Get guests error:", error);
+      throw new Error(error.message || "Failed to fetch guest records");
     }
   }
 
@@ -561,13 +701,16 @@ class AttendanceService {
 
       // Upload new signature if provided
       if (signature_file) {
-        signature_path = await uploadService.saveFile(signature_file, 'signatures');
+        signature_path = await uploadService.saveFile(
+          signature_file,
+          "signatures"
+        );
       }
 
       // Prepare update data
       const update_payload = {
         ...update_data,
-        signature: signature_path
+        signature: signature_path,
       };
 
       // Convert visit_date to Date object if provided
@@ -576,10 +719,7 @@ class AttendanceService {
       }
 
       // Update guest record
-      await db
-        .update(guests)
-        .set(update_payload)
-        .where(eq(guests.id, id));
+      await db.update(guests).set(update_payload).where(eq(guests.id, id));
 
       // Fetch updated record
       const updated_guest = await this.getGuestById(id);
@@ -587,12 +727,11 @@ class AttendanceService {
       return {
         data: updated_guest.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Update guest error:', error);
-      throw new Error(error.message || 'Failed to update guest record');
+      console.error("Update guest error:", error);
+      throw new Error(error.message || "Failed to update guest record");
     }
   }
 
@@ -614,15 +753,14 @@ class AttendanceService {
 
       return {
         data: {
-          message: 'Guest record deleted successfully'
+          message: "Guest record deleted successfully",
         },
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Delete guest error:', error);
-      throw new Error(error.message || 'Failed to delete guest record');
+      console.error("Delete guest error:", error);
+      throw new Error(error.message || "Failed to delete guest record");
     }
   }
 
@@ -641,11 +779,11 @@ class AttendanceService {
         .limit(1);
 
       if (existing_guest.length === 0) {
-        throw new Error('Guest record not found');
+        throw new Error("Guest record not found");
       }
 
       if (!existing_guest[0].deleted_at) {
-        throw new Error('Guest record is not deleted');
+        throw new Error("Guest record is not deleted");
       }
 
       // Restore guest record
@@ -660,12 +798,11 @@ class AttendanceService {
       return {
         data: restored_guest.data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Restore guest error:', error);
-      throw new Error(error.message || 'Failed to restore guest record');
+      console.error("Restore guest error:", error);
+      throw new Error(error.message || "Failed to restore guest record");
     }
   }
 
@@ -688,7 +825,7 @@ class AttendanceService {
         } catch (error) {
           errors.push({
             data: attendance_data,
-            error: error.message
+            error: error.message,
           });
         }
       }
@@ -696,15 +833,16 @@ class AttendanceService {
       return {
         data: {
           created: created_records,
-          errors: errors
+          errors: errors,
         },
         status: errors.length === 0 ? 201 : 207, // 207 Multi-Status if some failed
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Bulk create attendance error:', error);
-      throw new Error(error.message || 'Failed to create bulk attendance records');
+      console.error("Bulk create attendance error:", error);
+      throw new Error(
+        error.message || "Failed to create bulk attendance records"
+      );
     }
   }
 
@@ -726,68 +864,82 @@ class AttendanceService {
 
           // Normalize keys to handle case-insensitive matching
           const normalized_row = {};
-          Object.keys(row).forEach(key => {
+          Object.keys(row).forEach((key) => {
             const normalized_key = key.toLowerCase().trim();
             normalized_row[normalized_key] = row[key];
           });
 
           // Extract data with case-insensitive key matching
-          const full_name = normalized_row['nama lengkap'] || row['Nama Lengkap'];
-          const date = normalized_row['tanggal'] || row['Tanggal'];
-          const time = normalized_row['waktu'] || row['Waktu'];
-          const information = normalized_row['informasi'] || row['Informasi'] || null;
+          const full_name =
+            normalized_row["nama lengkap"] || row["Nama Lengkap"];
+          const date = normalized_row["tanggal"] || row["Tanggal"];
+          // const time = normalized_row["waktu"] || row["Waktu"];
+          const information =
+            normalized_row["informasi"] || row["Informasi"] || null;
 
           // Validate required fields
-          if (!full_name || !date || !time) {
+          if (!full_name || !date ) {
             errors.push({
               index: i,
-              error: 'Missing required fields: Nama Lengkap, Tanggal, Waktu'
+              error: "Missing required fields: Nama Lengkap, Tanggal, Waktu",
             });
             continue;
           }
 
           // Format time if needed (convert HH:MM to HH:MM:SS)
-          let formatted_time = time;
-          if (time && time.length === 5) {
-            formatted_time = `${time}:00`;
-          }
+          // let formatted_time = time;
+          // if (time && time.length === 5) {
+          //   formatted_time = `${time}:00`;
+          // }
 
           // Find user by full_name
           const [user_record] = await db
             .select({ id: users.id, data: users.data })
             .from(users)
-            .where(and(
-              eq(users.full_name, full_name),
-              isNull(users.deleted_at)
-            ))
+            .where(
+              and(eq(users.full_name, full_name), isNull(users.deleted_at))
+            )
             .limit(1);
 
           if (!user_record) {
             errors.push({
               index: i,
               full_name: full_name,
-              error: `User with name '${full_name}' not found`
+              error: `User with name '${full_name}' not found`,
             });
             continue;
           }
 
           // Process status fields
-          const status_fields = ['hadir', 'izin', 'sakit', 'alpha', 'terlambat', 'cuti', 'dinas'];
+          const status_fields = [
+            "hadir",
+            "izin",
+            "sakit",
+            "alpha",
+            "terlambat",
+            "cuti",
+            "dinas",
+          ];
           const status_array = [];
 
           for (const status_field of status_fields) {
             // Check both proper case and lowercase versions
-            const proper_case_key = status_field.charAt(0).toUpperCase() + status_field.slice(1);
+            const proper_case_key =
+              status_field.charAt(0).toUpperCase() + status_field.slice(1);
             const value = normalized_row[status_field] || row[proper_case_key];
 
-            if (value && typeof value === 'string' && value.toLowerCase().trim() === 'ya') {
+            if (
+              value &&
+              typeof value === "string" &&
+              value.toLowerCase().trim() === "ya"
+            ) {
               status_array.push(status_field);
             }
           }
 
           // If no status found, default to 'alpha'
           if (status_array.length === 0) {
-            status_array.push('alpha');
+            status_array.push("alpha");
           }
 
           // Create processed attendance object
@@ -795,21 +947,20 @@ class AttendanceService {
             id_user: user_record.id,
             id_class: user_record.data.id_class || null,
             date: date,
-            time: formatted_time,
-            status: status_array
+            // time: formatted_time,
+            status: status_array,
           };
 
           // Add information if provided
-          if (information && information.trim() !== '') {
+          if (information && information.trim() !== "") {
             processed_attendance.information = information.trim();
           }
 
           processed_data.push(processed_attendance);
-
         } catch (error) {
           errors.push({
             index: i,
-            error: `Processing error: ${error.message}`
+            error: `Processing error: ${error.message}`,
           });
         }
       }
@@ -825,9 +976,8 @@ class AttendanceService {
       return {
         data: processed_data,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
       if (error.details) {
         // Re-throw errors with details
@@ -872,7 +1022,7 @@ class AttendanceService {
       const stats_results = await db
         .select({
           status: attendance.status,
-          count: count()
+          count: count(),
         })
         .from(attendance)
         .where(and(...where_conditions))
@@ -886,14 +1036,16 @@ class AttendanceService {
         alpha: 0,
         terlambat: 0,
         cuti: 0,
-        dinas: 0
+        dinas: 0,
       };
 
       console.log(stats_results);
 
-      stats_results.forEach(result => {
-        const status_array = Array.isArray(result.status) ? result.status : [result.status];
-        status_array.forEach(status => {
+      stats_results.forEach((result) => {
+        const status_array = Array.isArray(result.status)
+          ? result.status
+          : [result.status];
+        status_array.forEach((status) => {
           if (stats.hasOwnProperty(status)) {
             stats[status] += result.count;
             stats.total += result.count;
@@ -906,16 +1058,15 @@ class AttendanceService {
           statistics: stats,
           date_range: {
             start_date,
-            end_date
-          }
+            end_date,
+          },
         },
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Get attendance stats error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance statistics');
+      console.error("Get attendance stats error:", error);
+      throw new Error(error.message || "Failed to fetch attendance statistics");
     }
   }
 
@@ -926,7 +1077,12 @@ class AttendanceService {
    */
   static async getAttendanceByClass(filters = {}) {
     try {
-      const { start_date, end_date, id_class, include_relations = false } = filters;
+      const {
+        start_date,
+        end_date,
+        id_class,
+        include_relations = false,
+      } = filters;
 
       // Build where conditions for classes
       const class_where_conditions = [isNull(classes.deleted_at)];
@@ -945,7 +1101,7 @@ class AttendanceService {
           academic_years: {
             id: academicYears.id,
             year: academicYears.year,
-          }
+          },
         };
       } else {
         select_fields = {
@@ -970,7 +1126,7 @@ class AttendanceService {
           // Build where conditions for attendance stats
           const attendance_where_conditions = [
             isNull(attendance.deleted_at),
-            eq(attendance.id_class, class_item.id)
+            eq(attendance.id_class, class_item.id),
           ];
 
           if (start_date) {
@@ -985,7 +1141,7 @@ class AttendanceService {
           const stats_results = await db
             .select({
               status: attendance.status,
-              count: count()
+              count: count(),
             })
             .from(attendance)
             .where(and(...attendance_where_conditions))
@@ -1000,13 +1156,15 @@ class AttendanceService {
             alpha: 0,
             terlambat: 0,
             cuti: 0,
-            dinas: 0
+            dinas: 0,
           };
 
           // Process statistics results
-          stats_results.forEach(result => {
-            const status_array = Array.isArray(result.status) ? result.status : [result.status];
-            status_array.forEach(status => {
+          stats_results.forEach((result) => {
+            const status_array = Array.isArray(result.status)
+              ? result.status
+              : [result.status];
+            status_array.forEach((status) => {
               if (statistics.hasOwnProperty(status)) {
                 statistics[status] += result.count;
                 statistics.total += result.count;
@@ -1019,8 +1177,8 @@ class AttendanceService {
             statistics,
             date_range: {
               start_date,
-              end_date
-            }
+              end_date,
+            },
           };
         })
       );
@@ -1028,12 +1186,13 @@ class AttendanceService {
       return {
         data: classes_with_stats,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Get attendance by class error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance statistics by class');
+      console.error("Get attendance by class error:", error);
+      throw new Error(
+        error.message || "Failed to fetch attendance statistics by class"
+      );
     }
   }
 
@@ -1052,7 +1211,7 @@ class AttendanceService {
         id_academic_year,
         include_relations = false,
         page = 1,
-        limit = 10
+        limit = 10,
       } = filters;
 
       const offset = (page - 1) * limit;
@@ -1065,11 +1224,15 @@ class AttendanceService {
       }
 
       if (id_department) {
-        student_where_conditions.push(eq(students.id_department, id_department));
+        student_where_conditions.push(
+          eq(classes.id_department, id_department)
+        );
       }
 
       if (id_academic_year) {
-        student_where_conditions.push(eq(classes.id_academic_year, id_academic_year));
+        student_where_conditions.push(
+          eq(classes.id_academic_year, id_academic_year)
+        );
       }
 
       // Build select fields based on include_relations
@@ -1078,7 +1241,7 @@ class AttendanceService {
         select_fields = {
           id: students.id,
           id_class: students.id_class,
-          id_department: students.id_department,
+          id_department: classes.id_department,
           nis: students.nis,
           full_name: users.full_name,
           id_academic_year: classes.id_academic_year,
@@ -1090,13 +1253,18 @@ class AttendanceService {
             id: departments.id,
             name: departments.name,
             short_name: departments.short_name,
-          }
+          },
+          classes: {
+            id: classes.id,
+            grade: classes.grade,
+            subgrade: classes.subgrade,
+          },
         };
       } else {
         select_fields = {
           id: students.id,
           id_class: students.id_class,
-          id_department: students.id_department,
+          id_department: classes.id_department,
           nis: students.nis,
           full_name: users.full_name,
           id_academic_year: classes.id_academic_year,
@@ -1109,7 +1277,7 @@ class AttendanceService {
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
-        .leftJoin(departments, eq(students.id_department, departments.id))
+        .leftJoin(departments, eq(classes.id_department, departments.id))
         .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
         .where(and(...student_where_conditions));
 
@@ -1121,7 +1289,7 @@ class AttendanceService {
         .from(students)
         .leftJoin(users, eq(students.id_user, users.id))
         .leftJoin(classes, eq(students.id_class, classes.id))
-        .leftJoin(departments, eq(students.id_department, departments.id))
+        .leftJoin(departments, eq(classes.id_department, departments.id))
         .leftJoin(academicYears, eq(classes.id_academic_year, academicYears.id))
         .where(and(...student_where_conditions))
         .orderBy(desc(students.created_at))
@@ -1134,7 +1302,7 @@ class AttendanceService {
           // Build where conditions for attendance stats
           const attendance_where_conditions = [
             isNull(attendance.deleted_at),
-            eq(attendance.id_user, student_item.id)
+            eq(attendance.id_user, student_item.id),
           ];
 
           if (start_date) {
@@ -1149,7 +1317,7 @@ class AttendanceService {
           const stats_results = await db
             .select({
               status: attendance.status,
-              count: count()
+              count: count(),
             })
             .from(attendance)
             .where(and(...attendance_where_conditions))
@@ -1164,13 +1332,15 @@ class AttendanceService {
             alpha: 0,
             terlambat: 0,
             cuti: 0,
-            dinas: 0
+            dinas: 0,
           };
 
           // Process statistics results
-          stats_results.forEach(result => {
-            const status_array = Array.isArray(result.status) ? result.status : [result.status];
-            status_array.forEach(status => {
+          stats_results.forEach((result) => {
+            const status_array = Array.isArray(result.status)
+              ? result.status
+              : [result.status];
+            status_array.forEach((status) => {
               if (statistics.hasOwnProperty(status)) {
                 statistics[status] += result.count;
                 statistics.total += result.count;
@@ -1183,8 +1353,8 @@ class AttendanceService {
             statistics,
             date_range: {
               start_date,
-              end_date
-            }
+              end_date,
+            },
           };
         })
       );
@@ -1196,13 +1366,14 @@ class AttendanceService {
           page,
           limit,
           total,
-          total_pages: Math.ceil(total / limit)
-        }
+          total_pages: Math.ceil(total / limit),
+        },
       };
-
     } catch (error) {
-      console.error('Get attendance by students error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance statistics by students');
+      console.error("Get attendance by students error:", error);
+      throw new Error(
+        error.message || "Failed to fetch attendance statistics by students"
+      );
     }
   }
 
@@ -1219,7 +1390,7 @@ class AttendanceService {
         id_class,
         id_role,
         include_relations = false,
-        full_name
+        full_name,
       } = filters;
 
       // Build where conditions for users
@@ -1252,30 +1423,31 @@ class AttendanceService {
           student_id_class: students.id_class,
         })
         .from(users)
-        .leftJoin(teachers, and(
-          eq(users.id, teachers.id_user),
-          isNull(teachers.deleted_at)
-        ))
-        .leftJoin(students, and(
-          eq(users.id, students.id_user),
-          isNull(students.deleted_at)
-        ))
+        .leftJoin(
+          teachers,
+          and(eq(users.id, teachers.id_user), isNull(teachers.deleted_at))
+        )
+        .leftJoin(
+          students,
+          and(eq(users.id, students.id_user), isNull(students.deleted_at))
+        )
         .where(and(...user_where_conditions));
 
       // Add class filter if specified
       if (id_class) {
-        users_query.where(and(
-          ...user_where_conditions,
-          sql`(${teachers.id_class} = ${id_class} OR ${students.id_class} = ${id_class})`
-        ));
+        users_query.where(
+          and(
+            ...user_where_conditions,
+            sql`(${teachers.id_class} = ${id_class} OR ${students.id_class} = ${id_class})`
+          )
+        );
       }
 
       // Filter only teachers (role 3) and students (role 4) if no specific role is provided
       if (!id_role) {
-        users_query.where(and(
-          ...user_where_conditions,
-          sql`${users.id_role} IN (3, 4)`
-        ));
+        users_query.where(
+          and(...user_where_conditions, sql`${users.id_role} IN (3, 4)`)
+        );
       }
 
       const users_list = await users_query.orderBy(desc(users.created_at));
@@ -1286,7 +1458,7 @@ class AttendanceService {
           // Build where conditions for attendance stats
           const attendance_where_conditions = [
             isNull(attendance.deleted_at),
-            eq(attendance.id_user, user_item.id)
+            eq(attendance.id_user, user_item.id),
           ];
 
           if (start_date) {
@@ -1301,7 +1473,7 @@ class AttendanceService {
           const stats_results = await db
             .select({
               status: attendance.status,
-              count: count()
+              count: count(),
             })
             .from(attendance)
             .where(and(...attendance_where_conditions))
@@ -1316,13 +1488,15 @@ class AttendanceService {
             alpha: 0,
             terlambat: 0,
             cuti: 0,
-            dinas: 0
+            dinas: 0,
           };
 
           // Process statistics results
-          stats_results.forEach(result => {
-            const status_array = Array.isArray(result.status) ? result.status : [result.status];
-            status_array.forEach(status => {
+          stats_results.forEach((result) => {
+            const status_array = Array.isArray(result.status)
+              ? result.status
+              : [result.status];
+            status_array.forEach((status) => {
               if (statistics.hasOwnProperty(status)) {
                 statistics[status] += result.count;
                 statistics.total += result.count;
@@ -1331,14 +1505,17 @@ class AttendanceService {
           });
 
           // Determine which role-specific ID to use (teacher_id or student_id)
-          const role_specific_id = user_item.id_role === 3 ? user_item.teacher_id : user_item.student_id;
-          
+          const role_specific_id =
+            user_item.id_role === 3
+              ? user_item.teacher_id
+              : user_item.student_id;
+
           // Build user data structure based on role
           const user_data = {
             id: user_item.id,
-            full_name:user_item.full_name,
+            full_name: user_item.full_name,
             id_role: user_item.id_role,
-            data: {}
+            data: {},
           };
 
           // Add role-specific data
@@ -1358,24 +1535,27 @@ class AttendanceService {
             statistics,
             date_range: {
               start_date,
-              end_date
-            }
+              end_date,
+            },
           };
         })
       );
 
       // Filter out users without role-specific records (teacher_id or student_id is null)
-      const filtered_users_with_stats = users_with_stats.filter(user => user.id !== null);
+      const filtered_users_with_stats = users_with_stats.filter(
+        (user) => user.id !== null
+      );
 
       return {
         data: filtered_users_with_stats,
         status: 200,
-        pagination: null
+        pagination: null,
       };
-
     } catch (error) {
-      console.error('Get attendance user stats error:', error);
-      throw new Error(error.message || 'Failed to fetch attendance statistics by users');
+      console.error("Get attendance user stats error:", error);
+      throw new Error(
+        error.message || "Failed to fetch attendance statistics by users"
+      );
     }
   }
 }

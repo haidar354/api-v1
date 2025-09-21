@@ -15,9 +15,11 @@ export class AcademicController {
    */
   static async createAcademicYear(c) {
     try {
-      const academic_year_data = c.req.valid('json');
-      const response = await AcademicService.createAcademicYear(academic_year_data);
-      
+      const academic_year_data = c.req.valid("json");
+      const response = await AcademicService.createAcademicYear(
+        academic_year_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -31,9 +33,9 @@ export class AcademicController {
    */
   static async getAllAcademicYears(c) {
     try {
-      const query_params = c.req.valid('query');
+      const query_params = c.req.valid("query");
       const response = await AcademicService.getAllAcademicYears(query_params);
-      
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -47,11 +49,11 @@ export class AcademicController {
    */
   static async getAcademicYearById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getAcademicYearById(id);
-      
+
       if (!response.data) {
-        return errorResponse('Academic year not found', 404);
+        return errorResponse("Academic year not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -67,10 +69,13 @@ export class AcademicController {
    */
   static async updateAcademicYear(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updateAcademicYear(id, update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updateAcademicYear(
+        id,
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -84,10 +89,18 @@ export class AcademicController {
    */
   static async deleteAcademicYear(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteAcademicYear(id);
-      
-      return jsonResponse({ message: response.status === 200 ? "Academic year deleted successfully" : "Failed to delete academic year" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Academic year deleted successfully"
+              : "Failed to delete academic year",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -100,9 +113,9 @@ export class AcademicController {
    */
   static async restoreAcademicYear(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.restoreAcademicYear(parseInt(id));
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -118,9 +131,9 @@ export class AcademicController {
    */
   static async createPrincipalAgenda(c) {
     try {
-      const agenda_data = c.req.valid('json');
+      const agenda_data = c.req.valid("json");
       const response = await AcademicService.createPrincipalAgenda(agenda_data);
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -134,9 +147,36 @@ export class AcademicController {
    */
   static async getAllPrincipalAgendas(c) {
     try {
-      const query_params = c.req.valid('query');
-      const response = await AcademicService.getAllPrincipalAgendas(query_params);
-      
+      const query_params = c.req.valid("query");
+      const response = await AcademicService.getAllPrincipalAgendas(
+        query_params
+      );
+
+      // Jika request untuk statistics_month, return format statistics
+      if (query_params.statistics_month === true) {
+        return c.json(
+          {
+            data: response.data,
+            status: response.status,
+            message: response.message,
+          },
+          response.status
+        );
+      }
+
+      // Jika request hanya untuk count, return format berbeda
+      if (query_params.count === true) {
+        return c.json(
+          {
+            count: response.count,
+            status: response.status,
+            message: response.message,
+          },
+          response.status
+        );
+      }
+
+      // Untuk request normal dengan data dan pagination
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -150,11 +190,11 @@ export class AcademicController {
    */
   static async getPrincipalAgendaById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getPrincipalAgendaById(id);
-      
+
       if (!response.data) {
-        return errorResponse('Principal agenda not found', 404);
+        return errorResponse("Principal agenda not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -170,10 +210,13 @@ export class AcademicController {
    */
   static async updatePrincipalAgenda(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updatePrincipalAgenda(id, update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updatePrincipalAgenda(
+        id,
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -187,10 +230,18 @@ export class AcademicController {
    */
   static async deletePrincipalAgenda(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deletePrincipalAgenda(id);
-      
-      return jsonResponse({ message: response.status === 200 ? "Principal agenda deleted successfully" : "Failed to delete principal agenda" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Principal agenda deleted successfully"
+              : "Failed to delete principal agenda",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -203,9 +254,11 @@ export class AcademicController {
    */
   static async restorePrincipalAgenda(c) {
     try {
-      const { id } = c.req.valid('param');
-      const response = await AcademicService.restorePrincipalAgenda(parseInt(id));
-      
+      const { id } = c.req.valid("param");
+      const response = await AcademicService.restorePrincipalAgenda(
+        parseInt(id)
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -221,9 +274,9 @@ export class AcademicController {
    */
   static async createSurvey(c) {
     try {
-      const survey_data = c.req.valid('json');
+      const survey_data = c.req.valid("json");
       const response = await AcademicService.createSurvey(survey_data);
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -237,9 +290,9 @@ export class AcademicController {
    */
   static async getAllSurveys(c) {
     try {
-      const query_params = c.req.valid('query');
+      const query_params = c.req.valid("query");
       const response = await AcademicService.getAllSurveys(query_params);
-      
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -253,11 +306,11 @@ export class AcademicController {
    */
   static async getSurveyById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getSurveyById(id);
-      
+
       if (!response.data) {
-        return errorResponse('Survey not found', 404);
+        return errorResponse("Survey not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -273,10 +326,10 @@ export class AcademicController {
    */
   static async updateSurvey(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
       const response = await AcademicService.updateSurvey(id, update_data);
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -290,10 +343,18 @@ export class AcademicController {
    */
   static async deleteSurvey(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteSurvey(id);
-      
-      return jsonResponse({ message: response.status === 200 ? "Survey deleted successfully" : "Failed to delete survey" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Survey deleted successfully"
+              : "Failed to delete survey",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -306,9 +367,9 @@ export class AcademicController {
    */
   static async restoreSurvey(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.restoreSurvey(parseInt(id));
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -324,9 +385,11 @@ export class AcademicController {
    */
   static async createSurveyQuestion(c) {
     try {
-      const question_data = c.req.valid('json');
-      const response = await AcademicService.createSurveyQuestion(question_data);
-      
+      const question_data = c.req.valid("json");
+      const response = await AcademicService.createSurveyQuestion(
+        question_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -340,9 +403,11 @@ export class AcademicController {
    */
   static async getAllSurveyQuestions(c) {
     try {
-      const query_params = c.req.valid('query');
-      const response = await AcademicService.getAllSurveyQuestions(query_params);
-      
+      const query_params = c.req.valid("query");
+      const response = await AcademicService.getAllSurveyQuestions(
+        query_params
+      );
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -356,11 +421,11 @@ export class AcademicController {
    */
   static async getSurveyQuestionById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getSurveyQuestionById(id);
-      
+
       if (!response.data) {
-        return errorResponse('Survey question not found', 404);
+        return errorResponse("Survey question not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -376,10 +441,13 @@ export class AcademicController {
    */
   static async updateSurveyQuestion(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updateSurveyQuestion(id, update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updateSurveyQuestion(
+        id,
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -393,10 +461,18 @@ export class AcademicController {
    */
   static async deleteSurveyQuestion(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteSurveyQuestion(id);
-      
-      return jsonResponse({ message: response.status === 200 ? "Survey question deleted successfully" : "Failed to delete survey question" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Survey question deleted successfully"
+              : "Failed to delete survey question",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -409,9 +485,11 @@ export class AcademicController {
    */
   static async restoreSurveyQuestion(c) {
     try {
-      const { id } = c.req.valid('param');
-      const response = await AcademicService.restoreSurveyQuestion(parseInt(id));
-      
+      const { id } = c.req.valid("param");
+      const response = await AcademicService.restoreSurveyQuestion(
+        parseInt(id)
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -427,9 +505,11 @@ export class AcademicController {
    */
   static async createSurveyResponse(c) {
     try {
-      const response_data = c.req.valid('json');
-      const response = await AcademicService.createSurveyResponse(response_data);
-      
+      const response_data = c.req.valid("json");
+      const response = await AcademicService.createSurveyResponse(
+        response_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -443,9 +523,11 @@ export class AcademicController {
    */
   static async createBulkSurveyResponses(c) {
     try {
-      const bulk_data = c.req.valid('json');
-      const response = await AcademicService.createBulkSurveyResponses(bulk_data.responses);
-      
+      const bulk_data = c.req.valid("json");
+      const response = await AcademicService.createBulkSurveyResponses(
+        bulk_data.responses
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -459,9 +541,11 @@ export class AcademicController {
    */
   static async getAllSurveyResponses(c) {
     try {
-      const query_params = c.req.valid('query');
-      const response = await AcademicService.getAllSurveyResponses(query_params);
-      
+      const query_params = c.req.valid("query");
+      const response = await AcademicService.getAllSurveyResponses(
+        query_params
+      );
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -475,11 +559,11 @@ export class AcademicController {
    */
   static async getSurveyResponseById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getSurveyResponseById(id);
-      
+
       if (!response.data) {
-        return errorResponse('Survey response not found', 404);
+        return errorResponse("Survey response not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -495,10 +579,13 @@ export class AcademicController {
    */
   static async updateSurveyResponse(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updateSurveyResponse(id, update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updateSurveyResponse(
+        id,
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -512,10 +599,18 @@ export class AcademicController {
    */
   static async deleteSurveyResponse(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteSurveyResponse(id);
-      
-      return jsonResponse({ message: response.status === 200 ? "Survey response deleted successfully" : "Failed to delete survey response" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Survey response deleted successfully"
+              : "Failed to delete survey response",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -528,9 +623,11 @@ export class AcademicController {
    */
   static async restoreSurveyResponse(c) {
     try {
-      const { id } = c.req.valid('param');
-      const response = await AcademicService.restoreSurveyResponse(parseInt(id));
-      
+      const { id } = c.req.valid("param");
+      const response = await AcademicService.restoreSurveyResponse(
+        parseInt(id)
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -546,9 +643,11 @@ export class AcademicController {
    */
   static async createSurveySurveyor(c) {
     try {
-      const surveyor_data = c.req.valid('json');
-      const response = await AcademicService.createSurveySurveyor(surveyor_data);
-      
+      const surveyor_data = c.req.valid("json");
+      const response = await AcademicService.createSurveySurveyor(
+        surveyor_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -562,9 +661,11 @@ export class AcademicController {
    */
   static async getAllSurveySurveyors(c) {
     try {
-      const query_params = c.req.valid('query');
-      const response = await AcademicService.getAllSurveySurveyors(query_params);
-      
+      const query_params = c.req.valid("query");
+      const response = await AcademicService.getAllSurveySurveyors(
+        query_params
+      );
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -578,11 +679,13 @@ export class AcademicController {
    */
   static async getSurveySurveyorById(c) {
     try {
-      const { id } = c.req.valid('param');
-      const response = await AcademicService.getSurveySurveyorById(parseInt(id));
-      
+      const { id } = c.req.valid("param");
+      const response = await AcademicService.getSurveySurveyorById(
+        parseInt(id)
+      );
+
       if (!response.data) {
-        return errorResponse('Survey surveyor not found', 404);
+        return errorResponse("Survey surveyor not found", 404);
       }
 
       return jsonResponse(response.data, response.status);
@@ -598,10 +701,13 @@ export class AcademicController {
    */
   static async updateSurveySurveyor(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updateSurveySurveyor(parseInt(id), update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updateSurveySurveyor(
+        parseInt(id),
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -615,10 +721,18 @@ export class AcademicController {
    */
   static async deleteSurveySurveyor(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteSurveySurveyor(parseInt(id));
-      
-      return jsonResponse({ message: response.status === 200 ? "Survey surveyor deleted successfully" : "Failed to delete survey surveyor" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Survey surveyor deleted successfully"
+              : "Failed to delete survey surveyor",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -631,9 +745,11 @@ export class AcademicController {
    */
   static async restoreSurveySurveyor(c) {
     try {
-      const { id } = c.req.valid('param');
-      const response = await AcademicService.restoreSurveySurveyor(parseInt(id));
-      
+      const { id } = c.req.valid("param");
+      const response = await AcademicService.restoreSurveySurveyor(
+        parseInt(id)
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -649,9 +765,9 @@ export class AcademicController {
    */
   static async createLetter(c) {
     try {
-      const letter_data = c.req.valid('json');
+      const letter_data = c.req.valid("json");
       const response = await AcademicService.createLetter(letter_data);
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -665,9 +781,9 @@ export class AcademicController {
    */
   static async createBulkLetters(c) {
     try {
-      const { letters } = c.req.valid('json');
+      const { letters } = c.req.valid("json");
       const response = await AcademicService.createBulkLetters(letters);
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -681,9 +797,9 @@ export class AcademicController {
    */
   static async getAllLetters(c) {
     try {
-      const query_params = c.req.valid('query');
+      const query_params = c.req.valid("query");
       const response = await AcademicService.getAllLetters(query_params);
-      
+
       return jsonResponse(response.data, response.status, response.pagination);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -697,13 +813,13 @@ export class AcademicController {
    */
   static async getLetterById(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.getLetterById(parseInt(id));
-      
+
       if (!response.data) {
-        return errorResponse('Letter not found', 404);
+        return errorResponse("Letter not found", 404);
       }
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -717,10 +833,13 @@ export class AcademicController {
    */
   static async updateLetter(c) {
     try {
-      const { id } = c.req.valid('param');
-      const update_data = c.req.valid('json');
-      const response = await AcademicService.updateLetter(parseInt(id), update_data);
-      
+      const { id } = c.req.valid("param");
+      const update_data = c.req.valid("json");
+      const response = await AcademicService.updateLetter(
+        parseInt(id),
+        update_data
+      );
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 400);
@@ -734,10 +853,18 @@ export class AcademicController {
    */
   static async deleteLetter(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.deleteLetter(parseInt(id));
-      
-      return jsonResponse({ message: response.status === 200 ? "Letter deleted successfully" : "Failed to delete letter" }, response.status);
+
+      return jsonResponse(
+        {
+          message:
+            response.status === 200
+              ? "Letter deleted successfully"
+              : "Failed to delete letter",
+        },
+        response.status
+      );
     } catch (error) {
       return errorResponse(error.message, 400);
     }
@@ -750,9 +877,9 @@ export class AcademicController {
    */
   static async restoreLetter(c) {
     try {
-      const { id } = c.req.valid('param');
+      const { id } = c.req.valid("param");
       const response = await AcademicService.restoreLetter(parseInt(id));
-      
+
       return jsonResponse(response.data, response.status);
     } catch (error) {
       return errorResponse(error.message, 500);
@@ -771,7 +898,7 @@ export class AcademicController {
       if (response.status >= 200 && response.status < 300) {
         return jsonResponse(response.data, 200);
       } else {
-        throw new Error('Service health check failed');
+        throw new Error("Service health check failed");
       }
     } catch (error) {
       console.log("ERROR: ", error);

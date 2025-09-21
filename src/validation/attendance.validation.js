@@ -18,16 +18,6 @@ export const attendanceSchema = z.object({
     .int('Role ID must be an integer')
     .positive('Role ID must be positive'),
     
-  time: z.string()
-    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Time must be in HH:MM or HH:MM:SS format')
-    .transform((val) => {
-      // Convert HH:MM to HH:MM:SS format if needed
-      if (val && val.length === 5) {
-        return `${val}:00`;
-      }
-      return val;
-    }),
-
   date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
 
@@ -178,7 +168,7 @@ export const attendanceQuerySchema = z.object({
     .refine((val) => val > 0, 'Page must be positive'),
 
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
-    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+    .refine((val) => val > 0 && val <= 10000, 'Limit must be between 1 and 100'),
 }).refine((data) => {
   if (data.start_date && data.end_date) {
     return new Date(data.start_date) <= new Date(data.end_date);
@@ -366,31 +356,64 @@ export const guestIdSchema = z.object({
 /**
  * Guest query validation schemas
  */
-export const guestQuerySchema = z.object({
-  start_date: z.string().optional()
-    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'Start date must be in YYYY-MM-DD format'),
+export const guestQuerySchema = z
+  .object({
+    start_date: z
+      .string()
+      .optional()
+      .refine(
+        (date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date),
+        "Start date must be in YYYY-MM-DD format"
+      ),
 
-  end_date: z.string().optional()
-    .refine((date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date), 'End date must be in YYYY-MM-DD format'),
+    end_date: z
+      .string()
+      .optional()
+      .refine(
+        (date) => !date || /^\d{4}-\d{2}-\d{2}$/.test(date),
+        "End date must be in YYYY-MM-DD format"
+      ),
 
-  search: z.string().optional()
-    .transform((val) => val?.trim())
-    .refine((val) => !val || val.length >= 2, 'Search term must be at least 2 characters'),
+    search: z
+      .string()
+      .optional()
+      .transform((val) => val?.trim())
+      .refine(
+        (val) => !val || val.length >= 2,
+        "Search term must be at least 2 characters"
+      ),
 
-  page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1)
-    .refine((val) => val > 0, 'Page must be positive'),
+    page: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : 1))
+      .refine((val) => val > 0, "Page must be positive"),
 
-  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 10)
-    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
-}).refine((data) => {
-  if (data.start_date && data.end_date) {
-    return new Date(data.start_date) <= new Date(data.end_date);
-  }
-  return true;
-}, {
-  message: 'Start date must be before or equal to end date',
-  path: ['end_date'],
-});
+    limit: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : 10))
+      .refine(
+        (val) => val > 0 && val <= 10000,
+        "Limit must be between 1 and 100"
+      ),
+
+    // Parameter baru untuk monthly breakdown
+    statistics_month: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.end_date) {
+        return new Date(data.start_date) <= new Date(data.end_date);
+      }
+      return true;
+    },
+    {
+      message: "Start date must be before or equal to end date",
+      path: ["end_date"],
+    }
+  );
+
 
 /**
  * Attendance report validation schemas

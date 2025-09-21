@@ -21,8 +21,8 @@ SET time_zone = "+00:00";
 -- Database: `website_sekolahku`
 --
 -- Create database
-CREATE DATABASE IF NOT EXISTS website_sekolahku;
-USE website_sekolahku;
+CREATE DATABASE IF NOT EXISTS website_sekolahku2;
+USE website_sekolahku2;
 -- --------------------------------------------------------
 
 --

@@ -379,12 +379,31 @@ export class AttendanceController {
   static async getGuests(c) {
     try {
       // Get validated query parameters from middleware
-      const filters = c.req.valid("query");
+      const validatedFilters = c.req.valid("query");
+
+      // Get additional query parameters directly
+      const count = c.req.query("count");
+      const month = c.req.query("month");
+      const monthSet = c.req.query("monthSet");
+      const year = c.req.query("year");
+      const yearSet = c.req.query("yearSet");
+      const statistics_month = c.req.query("statistics_month");
+
+      // Merge all filters
+      const filters = {
+        ...validatedFilters,
+        count,
+        month,
+        monthSet,
+        year,
+        yearSet,
+        statistics_month,
+      };
 
       // Fetch guest records
       const result = await attendanceService.getAllGuests(filters);
 
-      return jsonResponse(result.data, result.status);
+      return jsonResponse(result.data, result.status, result.pagination);
     } catch (error) {
       console.error("Get guests error:", error);
       return errorResponse(

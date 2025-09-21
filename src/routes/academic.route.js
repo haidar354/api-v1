@@ -33,6 +33,28 @@ import {
   validateBulkLetter,
   validateUpdateLetter
 } from '../validation/academic.validation.js';
+import {
+  eq,
+  and,
+  isNull,
+  like,
+  or,
+  desc,
+  asc,
+  sql,
+  gte,
+  lte,
+} from "drizzle-orm";
+import { db } from "../config/database.js";
+import {
+  academicYears,
+  principalAgendas,
+  surveys,
+  surveyQuestions,
+  surveyResponses,
+  surveySurveyors,
+  letters,
+} from "../models/academic.model.js";
 
 const academicRoute = new Hono();
 
@@ -68,6 +90,45 @@ academicRoute.post('/years/:id/restore', authMiddleware, validateAcademicYearId,
 
 // GET /academic/agendas - Get all principal agendas with pagination and filtering
 academicRoute.get('/agendas', authMiddleware, validatePrincipalAgendaQuery, AcademicController.getAllPrincipalAgendas);
+
+academicRoute.get("/agendas/today/latest", async (c) => {
+  try {
+    // Gunakan timezone lokal (Indonesia)
+    const today = new Date();
+    const localDate = new Date(
+      today.getTime() - today.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .split("T")[0];
+
+    const [agenda] = await db
+      .select()
+      .from(principalAgendas)
+      .where(
+        and(
+          sql`DATE(${principalAgendas.event_date}) = ${localDate}`,
+          isNull(principalAgendas.deleted_at)
+        )
+      )
+      .orderBy(desc(principalAgendas.created_at))
+      .limit(1);
+
+    return c.json({
+      data: agenda || null,
+      status: 200,
+      pagination: null,
+    });
+  } catch (error) {
+    return c.json(
+      {
+        error: error.message,
+        status: 500,
+        data: null,
+      },
+      500
+    );
+  }
+});
 
 // GET /academic/agendas/:id - Get principal agenda by ID
 academicRoute.get('/agendas/:id', authMiddleware, validatePrincipalAgendaId, AcademicController.getPrincipalAgendaById);
