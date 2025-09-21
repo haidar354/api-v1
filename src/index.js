@@ -202,6 +202,11 @@ app.onError((error, c) => {
 const port = parseInt(process.env.PORT) || 8080;
 const hostname = "0.0.0.0"; // Changed from localhost to 0.0.0.0 for Railway
 
+console.log(`🔍 Port debug info:`);
+console.log(`  - process.env.PORT: ${process.env.PORT}`);
+console.log(`  - Parsed port: ${port}`);
+console.log(`  - Hostname: ${hostname}`);
+
 /**
  * Graceful shutdown handling
  */
@@ -244,11 +249,14 @@ serve(
   {
     fetch: app.fetch,
     port: port,
-    hostname: hostname,
+    hostname: "0.0.0.0", // Force explicit hostname
   },
   (info) => {
     console.log(`🚀 Hono server started successfully`);
     console.log(`📍 Server info:`, info);
+    console.log(
+      `🌐 Server should be accessible at: https://api-v1-production-1b72.up.railway.app`
+    );
   }
 );
 
