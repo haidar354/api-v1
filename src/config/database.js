@@ -23,16 +23,35 @@ if (process.env.DATABASE_URL) {
   }
 }
 
-// Fallback to individual environment variables
+// Railway specific config based on actual variables
+const isRailway =
+  process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV === "production";
+
 const dbConfig = {
-  host: process.env.DB_HOST || process.env.MYSQL_HOST || "localhost",
-  user: process.env.DB_USER || process.env.MYSQL_USER || "root",
+  host:
+    process.env.DB_HOST ||
+    process.env.MYSQLHOST ||
+    process.env.MYSQL_HOST ||
+    "mysql.railway.internal",
+  user:
+    process.env.DB_USER ||
+    process.env.MYSQLUSER ||
+    process.env.MYSQL_USER ||
+    "root",
   password:
     process.env.DB_PASSWORD ||
-    process.env.MYSQL_PASSWORD ||
+    process.env.MYSQLPASSWORD ||
+    process.env.MYSQL_ROOT_PASSWORD ||
     "AxVIxEoUIDWqOiujqVBMFYFkNxvsAtzk",
-  database: process.env.DB_NAME || process.env.MYSQL_DATABASE || "railway",
-  port: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT) || 3306,
+  database:
+    process.env.DB_NAME ||
+    process.env.MYSQLDATABASE ||
+    process.env.MYSQL_DATABASE ||
+    "railway",
+  port:
+    parseInt(
+      process.env.DB_PORT || process.env.MYSQLPORT || process.env.MYSQL_PORT
+    ) || 3306,
   // Connection pool settings
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
   connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT) || 30000, // 30s for Railway
@@ -147,32 +166,33 @@ async function initializeDatabase() {
   }
 }
 
-// Initialize database on module load
-try {
-  await initializeDatabase();
-} catch (error) {
-  console.error("Database initialization failed:", error.message);
-  throw error;
+// Initialize database lazily (not on module load to avoid startup crashes)
+let initialized = false;
+
+async function ensureInitialized() {
+  if (!initialized) {
+    await initializeDatabase();
+    initialized = true;
+  }
+  return db;
 }
 
 /**
- * Get database connection pool
+ * Get Drizzle database instance (with lazy initialization)
  */
-export function getPool() {
+export async function getDB() {
+  return await ensureInitialized();
+}
+
+/**
+ * Get database connection pool (with lazy initialization)
+ */
+export async function getPool() {
+  await ensureInitialized();
   if (!pool) {
     throw new Error("Database pool not initialized");
   }
   return pool;
-}
-
-/**
- * Get Drizzle database instance
- */
-export function getDB() {
-  if (!db) {
-    throw new Error("Database instance not initialized");
-  }
-  return db;
 }
 
 /**
