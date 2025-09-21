@@ -115,27 +115,26 @@ const getContentType = (filePath) => {
 app.get("/public/*", (c) => serveStaticFile(c, "/public"));
 
 /**
- * Root endpoint
+ * Root endpoint - simplified
  */
 app.get("/", (c) => {
-  return c.json({
-    success: true,
-    message: "Website Sekolahku API",
-    version: "1.0.0",
-    timestamp: new Date().toISOString(),
-  });
+  console.log("Root endpoint accessed");
+  return c.text("Website Sekolahku API - OK");
 });
 
 /**
- * Health check endpoints
+ * Simple health check endpoints
  */
 app.get("/health", (c) => {
+  console.log("Health endpoint accessed");
+  return c.text("OK");
+});
+
+app.get("/test", (c) => {
+  console.log("Test endpoint accessed");
   return c.json({
-    message: "API is healthy",
-    status: "ok",
+    message: "Test successful",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "development",
   });
 });
 
@@ -249,13 +248,16 @@ serve(
   {
     fetch: app.fetch,
     port: port,
-    hostname: "0.0.0.0", // Force explicit hostname
+    hostname: "0.0.0.0",
   },
   (info) => {
-    console.log(`🚀 Hono server started successfully`);
-    console.log(`📍 Server info:`, info);
+    console.log("Hono server started successfully");
+    console.log("Server info:", info);
     console.log(
-      `🌐 Server should be accessible at: https://api-v1-production-1b72.up.railway.app`
+      "Server should be accessible at: https://api-v1-production-1b72.up.railway.app"
+    );
+    console.log(
+      "Test with: curl -v https://api-v1-production-1b72.up.railway.app/test"
     );
   }
 );
