@@ -240,10 +240,16 @@ console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 console.log(`Database: ${process.env.DB_NAME || "website_sekolahku"}`);
 console.log(`Railway PORT: ${process.env.PORT || "not set"}`);
 
-serve({
-  fetch: app.fetch,
-  port,
-  hostname, // Add hostname to serve config
-});
+serve(
+  {
+    fetch: app.fetch,
+    port: port,
+    hostname: hostname,
+  },
+  (info) => {
+    console.log(`🚀 Hono server started successfully`);
+    console.log(`📍 Server info:`, info);
+  }
+);
 
 export default app;
