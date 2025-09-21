@@ -49,7 +49,55 @@ export const academicYearSchema = z
 
 export const createAcademicYearSchema = academicYearSchema;
 
-export const updateAcademicYearSchema = academicYearSchema.partial();
+export const updateAcademicYearSchema = z
+  .object({
+    year: z
+      .string()
+      .regex(
+        /^\d{4}\/\d{4}$/,
+        "Year must be in YYYY/YYYY format (e.g., 2024/2025)"
+      )
+      .refine((year) => {
+        const [startYear, endYear] = year.split("/").map(Number);
+        return endYear === startYear + 1;
+      }, "End year must be exactly one year after start year")
+      .optional(),
+
+    start_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format")
+      .refine((date) => {
+        const parsed_date = new Date(date);
+        return !isNaN(parsed_date.getTime());
+      }, "Start date must be a valid date")
+      .optional(),
+
+    end_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format")
+      .refine((date) => {
+        const parsed_date = new Date(date);
+        return !isNaN(parsed_date.getTime());
+      }, "End date must be a valid date")
+      .optional(),
+
+    is_active: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.end_date) {
+        const start_date = new Date(data.start_date);
+        const end_date = new Date(data.end_date);
+        return end_date > start_date;
+      }
+      return true;
+    },
+    {
+      message: "End date must be after start date",
+      path: ["end_date"],
+    }
+  );
+
 
 export const academicYearIdSchema = z.object({
   id: z
