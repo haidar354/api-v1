@@ -8,7 +8,6 @@
   "dependencies": {
     "@hono/node-server": "^1.19.3",
     "@hono/zod-validator": "^0.7.2",
-    "@types/multer": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.2",
@@ -24,6 +23,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "@types/multer": "^2.0.0"
   }
 }
