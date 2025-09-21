@@ -27,7 +27,10 @@ if (process.env.DATABASE_URL) {
 const dbConfig = {
   host: process.env.DB_HOST || process.env.MYSQL_HOST || "localhost",
   user: process.env.DB_USER || process.env.MYSQL_USER || "root",
-  password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || "",
+  password:
+    process.env.DB_PASSWORD ||
+    process.env.MYSQL_PASSWORD ||
+    "AxVIxEoUIDWqOiujqVBMFYFkNxvsAtzk",
   database: process.env.DB_NAME || process.env.MYSQL_DATABASE || "railway",
   port: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT) || 3306,
   // Connection pool settings
