@@ -170,7 +170,6 @@ app.route("/api/students", studentsRoute);
 app.route("/api/teachers", teachersRoute);
 app.route("/", imageRoute);
 
-
 /**
  * 404 Handler
  */
@@ -198,10 +197,10 @@ app.onError((error, c) => {
 });
 
 /**
- * Server Configuration
+ * Server Configuration - Fixed for Railway
  */
-const port = parseInt(process.env.PORT) || 3000;
-const hostname = process.env.HOST || "localhost";
+const port = parseInt(process.env.PORT) || 8080;
+const hostname = "0.0.0.0"; // Changed from localhost to 0.0.0.0 for Railway
 
 /**
  * Graceful shutdown handling
@@ -239,10 +238,12 @@ console.log(`Website Sekolahku API`);
 console.log(`Server running at: http://${hostname}:${port}`);
 console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 console.log(`Database: ${process.env.DB_NAME || "website_sekolahku"}`);
+console.log(`Railway PORT: ${process.env.PORT || "not set"}`);
 
 serve({
   fetch: app.fetch,
   port,
+  hostname, // Add hostname to serve config
 });
 
 export default app;
