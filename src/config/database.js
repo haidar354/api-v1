@@ -136,7 +136,10 @@ async function initializeDatabase() {
     console.error("Failed to establish database connection:", error.message);
 
     // Try alternative configurations
-    if (dbConfig.host.includes("railway")) {
+    if (
+      dbConfig.host.includes("railway") ||
+      dbConfig.host.includes("switchyard")
+    ) {
       console.log("Attempting Railway-specific connection settings...");
 
       // Railway sometimes needs different SSL settings
@@ -152,6 +155,9 @@ async function initializeDatabase() {
       };
 
       try {
+        if (pool) {
+          await pool.end();
+        }
         pool = mysql.createPool(railwayConfig);
         await testConnection();
         db = drizzle(pool);
@@ -166,29 +172,28 @@ async function initializeDatabase() {
   }
 }
 
-// Initialize database lazily (not on module load to avoid startup crashes)
-let initialized = false;
+// Initialize database immediately (not lazily)
+try {
+  await initializeDatabase();
+} catch (error) {
+  console.error("Database initialization failed:", error.message);
+  // Don't throw - let the app start but log the error
+}
 
-async function ensureInitialized() {
-  if (!initialized) {
-    await initializeDatabase();
-    initialized = true;
+/**
+ * Get Drizzle database instance
+ */
+export function getDB() {
+  if (!db) {
+    throw new Error("Database instance not initialized");
   }
   return db;
 }
 
 /**
- * Get Drizzle database instance (with lazy initialization)
+ * Get database connection pool
  */
-export async function getDB() {
-  return await ensureInitialized();
-}
-
-/**
- * Get database connection pool (with lazy initialization)
- */
-export async function getPool() {
-  await ensureInitialized();
+export function getPool() {
   if (!pool) {
     throw new Error("Database pool not initialized");
   }
@@ -215,6 +220,17 @@ export async function closeDatabase() {
  */
 export async function healthCheck() {
   try {
+    if (!pool) {
+      return {
+        status: "unhealthy",
+        error: "Database pool not initialized",
+        timestamp: new Date().toISOString(),
+        database: dbConfig.database,
+        host: dbConfig.host,
+        port: dbConfig.port,
+      };
+    }
+
     await testConnection();
     return {
       status: "healthy",
