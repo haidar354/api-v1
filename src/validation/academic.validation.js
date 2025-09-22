@@ -855,18 +855,17 @@ export const letterQuerySchema = z
         "Limit must be between 1 and 100"
       ),
 
-    // New count parameters
+    // Count parameter
     count: z
       .string()
       .optional()
-      .transform((val) => val === "true")
-      .default(false),
+      .transform((val) => val === "true"),
 
+    // Month parameters
     month: z
       .string()
       .optional()
-      .transform((val) => val === "true")
-      .default(false),
+      .transform((val) => val === "true"),
 
     monthSet: z
       .string()
@@ -877,11 +876,11 @@ export const letterQuerySchema = z
         "Month must be between 1 and 12"
       ),
 
+    // Year parameters
     year: z
       .string()
       .optional()
-      .transform((val) => val === "true")
-      .default(false),
+      .transform((val) => val === "true"),
 
     yearSet: z
       .string()
@@ -896,9 +895,16 @@ export const letterQuerySchema = z
     statistics_month: z
       .string()
       .optional()
-      .transform((val) => val === "true")
-      .default(false),
+      .transform((val) => val === "true"),
   })
+  .transform((data) => ({
+    // Apply defaults after transformation
+    ...data,
+    count: data.count ?? false,
+    month: data.month ?? false,
+    year: data.year ?? false,
+    statistics_month: data.statistics_month ?? false,
+  }))
   .refine(
     (data) => {
       if (data.start_date && data.end_date) {
