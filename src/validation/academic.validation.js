@@ -98,7 +98,6 @@ export const updateAcademicYearSchema = z
     }
   );
 
-
 export const academicYearIdSchema = z.object({
   id: z
     .string()
@@ -114,6 +113,7 @@ export const principalAgendaSchema = z.object({
     .string()
     .min(3, "Event name must be at least 3 characters")
     .max(255, "Event name must not exceed 255 characters")
+    .optional()
     .transform((val) => val.trim()),
 
   description: z
@@ -459,50 +459,68 @@ export const principalAgendaQuerySchema = z
         "Limit must be between 1 and 100"
       ),
 
-    // Parameter baru untuk count
+    // Parameter untuk count - accept both string and boolean
     count: z
-      .string()
+      .union([z.string(), z.boolean()])
       .optional()
-      .transform((val) => val === "true")
+      .transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true";
+      })
       .default(false),
 
-    // Parameter baru untuk filter bulan
+    // Parameter untuk filter bulan - accept both string and boolean
     month: z
-      .string()
+      .union([z.string(), z.boolean()])
       .optional()
-      .transform((val) => val === "true")
+      .transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true";
+      })
       .default(false),
 
     monthSet: z
-      .string()
+      .union([z.string(), z.number()])
       .optional()
-      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .transform((val) => {
+        if (typeof val === "number") return val;
+        return val ? parseInt(val, 10) : undefined;
+      })
       .refine(
         (val) => !val || (val >= 1 && val <= 12),
         "Month must be between 1 and 12"
       ),
 
-    // Parameter baru untuk filter tahun
+    // Parameter untuk filter tahun - accept both string and boolean
     year: z
-      .string()
+      .union([z.string(), z.boolean()])
       .optional()
-      .transform((val) => val === "true")
+      .transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true";
+      })
       .default(false),
 
     yearSet: z
-      .string()
+      .union([z.string(), z.number()])
       .optional()
-      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .transform((val) => {
+        if (typeof val === "number") return val;
+        return val ? parseInt(val, 10) : undefined;
+      })
       .refine(
         (val) => !val || (val >= 1900 && val <= 2100),
         "Year must be between 1900 and 2100"
       ),
 
-    // Parameter baru untuk statistics monthly
+    // Parameter untuk statistics monthly - accept both string and boolean
     statistics_month: z
-      .string()
+      .union([z.string(), z.boolean()])
       .optional()
-      .transform((val) => val === "true")
+      .transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true";
+      })
       .default(false),
   })
   .refine(
