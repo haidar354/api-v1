@@ -140,11 +140,23 @@ export class AuthService {
    * @param {string} email - User email
    * @returns {Promise<Object>} Reset token result
    */
-  static async forgotPassword(email) {
+  static async forgotPassword(email: string) {
     try {
+      // Debug: Log attempt to process password reset
+      console.debug("ForgotPassword: Initiating password reset for email", {
+        email,
+      });
+
       // Get user by email
       const userResult = await UsersService.getUserByEmail(email);
       const user = userResult.data;
+
+      // Debug: Log user lookup result
+      console.debug("ForgotPassword: User lookup result", {
+        email,
+        userExists: !!user,
+        userId: user?.id,
+      });
 
       // Check if user exists
       if (!user) {
@@ -166,6 +178,13 @@ export class AuthService {
         purpose: "password_reset",
       });
 
+      // Debug: Log token generation
+      console.debug("ForgotPassword: Reset token generated", {
+        email,
+        userId: user.id,
+        tokenLength: reset_token.length,
+      });
+
       // Send password reset email
       const email_result = await sendPasswordResetEmail({
         to: user.data.email,
@@ -175,15 +194,21 @@ export class AuthService {
 
       // Log email sending result for debugging
       if (email_result.success) {
-        console.log(`Password reset email sent successfully to ${user.email}`);
+        console.info("ForgotPassword: Password reset email sent successfully", {
+          email,
+          userId: user.id,
+          timestamp: new Date().toISOString(),
+        });
       } else {
-        console.error(
-          `Failed to send password reset email to ${user.email}:`,
-          email_result.message
-        );
+        console.error("ForgotPassword: Failed to send password reset email", {
+          email,
+          userId: user.id,
+          errorMessage: email_result.message,
+          timestamp: new Date().toISOString(),
+        });
       }
 
-      // Always return success message for security (don't reveal if email was sent or not)
+      // Always return success message for security
       return {
         data: {
           message: "If the email exists, a password reset link has been sent.",
@@ -192,7 +217,13 @@ export class AuthService {
         pagination: null,
       };
     } catch (error) {
-      console.error("Forgot password error:", error.message);
+      // Enhanced error logging with stack trace and context
+      console.error("ForgotPassword: Unexpected error during password reset", {
+        email,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      });
 
       // Always return success message for security
       return {
