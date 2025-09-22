@@ -21,13 +21,288 @@ import {
   letters,
 } from "../models/academic.model.js";
 import { users } from "../models/users.model.js";
-
+import ExcelJS from "exceljs";
 /**
  * Academic Service
  * Handles all CRUD operations for academic-related entities with Drizzle ORM
  */
+
 export class AcademicService {
   // ============= ACADEMIC YEARS =============
+  static async generateSurveysExcel(options = {}) {
+    try {
+      const {
+        id_academic_year,
+        search,
+        include_responses = false,
+        include_questions = false,
+        include_surveyors = false,
+      } = options;
+
+      // Get surveys data with related information
+      const surveys_result = await this.getAllSurveys({
+        id_academic_year,
+        search,
+        limit: 10000, // Get all data for export
+      });
+
+      if (!surveys_result.data || surveys_result.data.length === 0) {
+        return { data: null, status: 404, pagination: null };
+      }
+
+      // Create new workbook
+      const workbook = new ExcelJS.Workbook();
+
+      // Set workbook properties
+      workbook.creator = "Academic System";
+      workbook.lastModifiedBy = "Academic System";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+
+      // Create main surveys worksheet
+      const surveysSheet = workbook.addWorksheet("Surveys", {
+        properties: { tabColor: { argb: "FF0066CC" } },
+      });
+
+      // Define surveys columns
+      surveysSheet.columns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Title", key: "title", width: 30 },
+        { header: "Description", key: "description", width: 40 },
+        { header: "Academic Year", key: "academic_year", width: 15 },
+        { header: "Created At", key: "created_at", width: 20 },
+        { header: "Updated At", key: "updated_at", width: 20 },
+      ];
+
+      // Style the header row
+      surveysSheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF0066CC" },
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+      });
+
+      // Add surveys data
+      surveys_result.data.forEach((survey) => {
+        surveysSheet.addRow({
+          id: survey.id,
+          title: survey.title,
+          description: survey.description || "N/A",
+          academic_year: survey.academic_year?.year || "N/A",
+          created_at: new Date(survey.created_at).toLocaleDateString(),
+          updated_at: new Date(survey.updated_at).toLocaleDateString(),
+        });
+      });
+
+      // Auto-fit columns
+      surveysSheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: false }, (cell) => {
+          const length = cell.value ? cell.value.toString().length : 0;
+          if (length > maxLength) {
+            maxLength = length;
+          }
+        });
+        column.width = Math.min(Math.max(maxLength + 2, 10), 50);
+      });
+
+      // Include survey questions if requested
+      if (include_questions) {
+        const questionsSheet = workbook.addWorksheet("Survey Questions", {
+          properties: { tabColor: { argb: "FF00AA00" } },
+        });
+
+        questionsSheet.columns = [
+          { header: "ID", key: "id", width: 10 },
+          { header: "Survey ID", key: "survey_id", width: 12 },
+          { header: "Survey Title", key: "survey_title", width: 25 },
+          { header: "Question", key: "question", width: 40 },
+          { header: "Description", key: "description", width: 30 },
+          { header: "Created At", key: "created_at", width: 20 },
+        ];
+
+        // Style header
+        questionsSheet.getRow(1).eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FF00AA00" },
+          };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        });
+
+        // Get questions for all surveys
+        for (const survey of surveys_result.data) {
+          const questions_result = await this.getAllSurveyQuestions({
+            id_survey: survey.id,
+            limit: 10000,
+          });
+
+          questions_result.data.forEach((question) => {
+            questionsSheet.addRow({
+              id: question.id,
+              survey_id: question.id_survey,
+              survey_title: question.survey?.title || "N/A",
+              question: question.question,
+              description: question.description || "N/A",
+              created_at: new Date(question.created_at).toLocaleDateString(),
+            });
+          });
+        }
+
+        // Auto-fit columns for questions sheet
+        questionsSheet.columns.forEach((column) => {
+          let maxLength = 0;
+          column.eachCell({ includeEmpty: false }, (cell) => {
+            const length = cell.value ? cell.value.toString().length : 0;
+            if (length > maxLength) {
+              maxLength = length;
+            }
+          });
+          column.width = Math.min(Math.max(maxLength + 2, 10), 50);
+        });
+      }
+
+      // Include survey surveyors if requested
+      if (include_surveyors) {
+        const surveyorsSheet = workbook.addWorksheet("Survey Surveyors", {
+          properties: { tabColor: { argb: "FFAA6600" } },
+        });
+
+        surveyorsSheet.columns = [
+          { header: "ID", key: "id", width: 10 },
+          { header: "Survey ID", key: "survey_id", width: 12 },
+          { header: "Survey Title", key: "survey_title", width: 25 },
+          { header: "Surveyor Name", key: "name", width: 25 },
+          { header: "Organization", key: "organization", width: 30 },
+          { header: "Feedback", key: "feedback", width: 40 },
+          { header: "Created At", key: "created_at", width: 20 },
+        ];
+
+        // Style header
+        surveyorsSheet.getRow(1).eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFAA6600" },
+          };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        });
+
+        // Get surveyors for all surveys
+        for (const survey of surveys_result.data) {
+          const surveyors_result = await this.getAllSurveySurveyors({
+            id_survey: survey.id,
+            limit: 10000,
+          });
+
+          surveyors_result.data.forEach((surveyor) => {
+            surveyorsSheet.addRow({
+              id: surveyor.id,
+              survey_id: surveyor.id_survey,
+              survey_title: surveyor.survey?.title || "N/A",
+              name: surveyor.name,
+              organization: surveyor.organization || "N/A",
+              feedback: surveyor.feedback || "N/A",
+              created_at: new Date(surveyor.created_at).toLocaleDateString(),
+            });
+          });
+        }
+
+        // Auto-fit columns for surveyors sheet
+        surveyorsSheet.columns.forEach((column) => {
+          let maxLength = 0;
+          column.eachCell({ includeEmpty: false }, (cell) => {
+            const length = cell.value ? cell.value.toString().length : 0;
+            if (length > maxLength) {
+              maxLength = length;
+            }
+          });
+          column.width = Math.min(Math.max(maxLength + 2, 10), 50);
+        });
+      }
+
+      // Include survey responses if requested
+      if (include_responses) {
+        const responsesSheet = workbook.addWorksheet("Survey Responses", {
+          properties: { tabColor: { argb: "FFCC0000" } },
+        });
+
+        responsesSheet.columns = [
+          { header: "Response ID", key: "id", width: 12 },
+          { header: "Survey ID", key: "survey_id", width: 12 },
+          { header: "Survey Title", key: "survey_title", width: 25 },
+          { header: "Question ID", key: "question_id", width: 12 },
+          { header: "Question", key: "question_text", width: 40 },
+          { header: "Surveyor ID", key: "surveyor_id", width: 12 },
+          { header: "Surveyor Name", key: "surveyor_name", width: 25 },
+          { header: "Score", key: "score", width: 10 },
+          { header: "Created At", key: "created_at", width: 20 },
+        ];
+
+        // Style header
+        responsesSheet.getRow(1).eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFCC0000" },
+          };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        });
+
+        // Get responses for all surveys
+        for (const survey of surveys_result.data) {
+          const responses_result = await this.getAllSurveyResponses({
+            id_survey: survey.id,
+            limit: 10000,
+          });
+
+          responses_result.data.forEach((response) => {
+            responsesSheet.addRow({
+              id: response.id,
+              survey_id: response.id_survey,
+              survey_title: response.survey?.title || "N/A",
+              question_id: response.id_survey_question,
+              question_text: response.survey_question?.question || "N/A",
+              surveyor_id: response.id_survey_surveyor,
+              surveyor_name: response.survey_surveyor?.name || "N/A",
+              score: response.score,
+              created_at: new Date(response.created_at).toLocaleDateString(),
+            });
+          });
+        }
+
+        // Auto-fit columns for responses sheet
+        responsesSheet.columns.forEach((column) => {
+          let maxLength = 0;
+          column.eachCell({ includeEmpty: false }, (cell) => {
+            const length = cell.value ? cell.value.toString().length : 0;
+            if (length > maxLength) {
+              maxLength = length;
+            }
+          });
+          column.width = Math.min(Math.max(maxLength + 2, 10), 50);
+        });
+      }
+
+      // Generate buffer
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      return {
+        data: buffer,
+        status: 200,
+        pagination: null,
+      };
+    } catch (error) {
+      throw new Error(`Failed to generate surveys Excel: ${error.message}`);
+    }
+  }
 
   static async createAcademicYear(academic_year_data) {
     try {
@@ -335,9 +610,10 @@ export class AcademicService {
           const yearNumber = parseInt(yearSet);
           console.log("Getting statistics for year:", yearNumber);
 
+          // Fixed query - only select aggregated columns and group by them
           statisticsQuery = await db.execute(sql`
           SELECT 
-            LPAD(MONTH(event_date), 2, '0') as month_key,
+            MONTH(event_date) as month_number,
             COUNT(*) as count
           FROM principal_agendas 
           WHERE deleted_at IS NULL 
@@ -350,9 +626,10 @@ export class AcademicService {
           const currentYear = new Date().getFullYear();
           console.log("Getting statistics for current year:", currentYear);
 
+          // Fixed query - only select aggregated columns and group by them
           statisticsQuery = await db.execute(sql`
           SELECT 
-            LPAD(MONTH(event_date), 2, '0') as month_key,
+            MONTH(event_date) as month_number,
             COUNT(*) as count
           FROM principal_agendas 
           WHERE deleted_at IS NULL 
@@ -380,7 +657,8 @@ export class AcademicService {
           statisticsQuery[0].length > 0
         ) {
           statisticsQuery[0].forEach((row) => {
-            monthlyStats[row.month_key] = parseInt(row.count);
+            const monthKey = row.month_number.toString().padStart(2, "0");
+            monthlyStats[monthKey] = parseInt(row.count);
           });
         }
 
@@ -418,20 +696,20 @@ export class AcademicService {
             if (year && yearSet) {
               const yearNumber = parseInt(yearSet);
               rawQuery = await db.execute(sql`
-            SELECT COUNT(*) as total_count
-            FROM principal_agendas 
-            WHERE deleted_at IS NULL 
-            AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
-            AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
-          `);
+          SELECT COUNT(*) as total_count
+          FROM principal_agendas 
+          WHERE deleted_at IS NULL 
+          AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
+          AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
+        `);
             } else {
               // Hanya filter bulan
               rawQuery = await db.execute(sql`
-            SELECT COUNT(*) as total_count
-            FROM principal_agendas 
-            WHERE deleted_at IS NULL 
-            AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
-          `);
+          SELECT COUNT(*) as total_count
+          FROM principal_agendas 
+          WHERE deleted_at IS NULL 
+          AND EXTRACT(MONTH FROM event_date) = ${monthNumber}
+        `);
             }
 
             console.log("Raw query result:", rawQuery);
@@ -441,11 +719,11 @@ export class AcademicService {
           // Hanya filter tahun
           const yearNumber = parseInt(yearSet);
           const rawQuery = await db.execute(sql`
-        SELECT COUNT(*) as total_count
-        FROM principal_agendas 
-        WHERE deleted_at IS NULL 
-        AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
-      `);
+      SELECT COUNT(*) as total_count
+      FROM principal_agendas 
+      WHERE deleted_at IS NULL 
+      AND EXTRACT(YEAR FROM event_date) = ${yearNumber}
+    `);
           totalCount = rawQuery[0][0].total_count;
         } else {
           // Tidak ada filter bulan/tahun, gunakan Drizzle ORM biasa

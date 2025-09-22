@@ -13,6 +13,35 @@ export class AcademicController {
    * @param {Object} c - Hono context object
    * @returns {Promise<Response>} JSON response
    */
+
+  static async downloadSurveysExcel(c) {
+    try {
+      const query_params = c.req.valid("query");
+      const response = await AcademicService.generateSurveysExcel(query_params);
+
+      if (!response.data) {
+        return errorResponse("No data found to export", 404);
+      }
+
+      // Set headers for Excel file download
+      c.header(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      c.header(
+        "Content-Disposition",
+        `attachment; filename="surveys-${
+          new Date().toISOString().split("T")[0]
+        }.xlsx"`
+      );
+      c.header("Cache-Control", "no-cache");
+
+      return c.body(response.data);
+    } catch (error) {
+      return errorResponse(error.message, 500);
+    }
+  }
+
   static async createAcademicYear(c) {
     try {
       const academic_year_data = c.req.valid("json");

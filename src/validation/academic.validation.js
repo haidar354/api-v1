@@ -4,6 +4,45 @@ import { zValidator } from "@hono/zod-validator";
 /**
  * Academic year validation schemas
  */
+export const surveyExcelQuerySchema = z.object({
+  id_academic_year: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine(
+      (val) => val === undefined || val > 0,
+      "Academic year ID must be positive"
+    ),
+
+  search: z
+    .string()
+    .optional()
+    .transform((val) => val?.trim())
+    .refine(
+      (val) => !val || val.length >= 2,
+      "Search term must be at least 2 characters"
+    ),
+
+  include_responses: z
+    .string()
+    .optional()
+    .transform((val) => val === "true")
+    .default(false),
+
+  include_questions: z
+    .string()
+    .optional()
+    .transform((val) => val === "true")
+    .default(false),
+
+  include_surveyors: z
+    .string()
+    .optional()
+    .transform((val) => val === "true")
+    .default(false),
+});
+
+
 export const academicYearSchema = z
   .object({
     year: z
@@ -1025,3 +1064,7 @@ export const validateUpdateLetter = zValidator("json", updateLetterSchema);
 export const validateLetterId = zValidator("param", letterIdSchema);
 export const validateLetterQuery = zValidator("query", letterQuerySchema);
 export const validateBulkLetter = zValidator("json", bulkLetterSchema);
+export const validateSurveyExcelQuery = zValidator(
+  "query",
+  surveyExcelQuerySchema
+);
