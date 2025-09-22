@@ -930,7 +930,7 @@ export class AcademicService {
     try {
       const { page = 1, limit = 10, id_academic_year, search } = options;
       const offset = (page - 1) * limit;
-      const where_conditions = [];
+      const where_conditions = [isNull(surveys.deleted_at)];
 
       if (id_academic_year)
         where_conditions.push(eq(surveys.id_academic_year, id_academic_year));
