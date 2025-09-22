@@ -140,7 +140,7 @@ export class AuthService {
    * @param {string} email - User email
    * @returns {Promise<Object>} Reset token result
    */
-  static async forgotPassword(email: string) {
+  static async forgotPassword(email) {
     try {
       // Debug: Log attempt to process password reset
       console.debug("ForgotPassword: Initiating password reset for email", {
